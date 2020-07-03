@@ -668,15 +668,15 @@ def execute_mitag_annotate(args):
     parser = argparse.ArgumentParser(
         description='Assigns LCA based taxonomy to rRNA ssu reads.')
 
-    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input R1 fasta file(s). Files need to have the same order as in i2. Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons. Insert names have to be identical after removal of (.1 .2) or (/R1 /R2) or (/1 /2).')
-    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input R2 fasta file(s). Files need to have the same order as in i1. Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons. Insert names have to be identical after removal of (.1 .2) or (/R1 /R2) or (/1 /2).')
+    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input R1 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
+    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input R2 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
     parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input singletons/merged fasta file(s).')
 
     parser.add_argument('-o', action='store', dest='o',help='Output pattern. This pattern will be prepended to all output files',required=True)
     parser.add_argument('-t', action='store', dest='t', help='Number of threads for vsearch alignment', default=4, type=int)
     #parser.add_argument('-d', action='store', dest='db', help='Path to the vsearch database (udb or fasta)', required=True)
-    parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime.', default=1000, type=int)
-    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime.', default=1000, type=int)
+    parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
+    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=100', default=100, type=int)
     #parser.add_argument('-m', action='store', dest='tm', help='Taxmap file that maps tax ids to taxonomic path.', required=True)
     parser.add_argument('-b', dest='bin', help='Enable binning - write taxonomic assignment for each read/insert', action='store_true', default=False)
     results = parser.parse_args(args)
@@ -761,7 +761,9 @@ def execute_mtags_download():
     if db_marker_file.exists():
         logging.info('Database is already downloaded. Quitting')
     else:
+        
         logging.info('Start downloading the mTAGs database. ~600MB')
+        workdir.mkdir(parents=True, exist_ok=True)
         _execute_download(database_url, database, user, password)
         _execute_download(taxmap_url, taxmap, user, password)
 
