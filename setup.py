@@ -10,7 +10,7 @@ setup(
     license = "GPLv3",
     keywords = "bioinformatics metagenomics ngs 16S",
     url = "https://github.com/SushiLab/mTAGs",
-    packages=['mtags'],
+    packages=['mTAGs'],
     entry_points = {
         'console_scripts': ['mtags=mTAGs.mtags:main'],
     }
