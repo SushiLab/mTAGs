@@ -341,12 +341,12 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
     with open(fasta_forward, 'w') as fw_handle:
         with open(fasta_reverse, 'w') as rev_handle:
             for number_of_sequences, fasta in enumerate(stream_fa(input_seq_file), 1):
-                if number_of_sequences % 100000 == 0:
+                if number_of_sequences % 1000000 == 0:
                     logging.info(f'Processed reads:\t{number_of_sequences}')
                 header = fasta.header.split()[0]#re.sub('\s+', '_', fasta.header)
                 fw_handle.write(f'>{header}\n{fasta.sequence}\n')
                 rev_handle.write(f'>{header}\n{revcomp(fasta.sequence)}\n')
-
+    logging.info(f'Processed reads:\t{number_of_sequences}')
     logging.info(f'Finished extracting. Found {number_of_sequences} sequences.')
 
 
@@ -399,7 +399,7 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
     stats = collections.Counter()
     fasta_iterator = stream_fa(str(fasta_forward))
     for number_of_sequences, fasta in enumerate(fasta_iterator, 1):
-        if number_of_sequences % 100000 == 0:
+        if number_of_sequences % 1000000 == 0:
             logging.info(f'Processed reads:\t{number_of_sequences}')
         header = re.sub('\s+', '_', fasta.header)
         best_assignment = read_2_bestassignment.get(header, None)
@@ -412,7 +412,7 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
                 writer = open(o_file, 'w')
                 writers[best_assignment[0]] = writer
             writer.write(f'>{header}\n{fasta.sequence}\n')
-
+    logging.info(f'Processed reads:\t{number_of_sequences}')
     for writer in writers.values():
         writer.close()
     logging.info(f'Finished extracting reads/writing output')
@@ -529,9 +529,24 @@ def mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
     # 1.2. Check if you find unpaired sequences in the R1 files
     #input_seqfile_r1, input_seqfile_r2, input_seqfile_s =
 
+    logging.info(f'Input files:')
+    logging.info(f'\tForward readfiles:')
+    for ir in input_seqfiles_r1:
+        logging.info(f'\t\t{ir}')
+    logging.info(f'\tReverse readfiles:')
+    for ir in input_seqfiles_r2:
+        logging.info(f'\t\t{ir}')
+    logging.info(f'\tSingle/Merged readfiles:')
+    for ir in input_seqfiles_s:
+        logging.info(f'\t\t{ir}')
+    logging.info(f'Output pattern:')
+    logging.info(f'\t{out_file_pattern}')
+
+
+    
     paired_sequences, unpaired_sequences = test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s)
-    pe_fasta_file = pathlib.Path(out_file_pattern).with_suffix(f'.pe.fasta')
-    se_fasta_file = pathlib.Path(out_file_pattern).with_suffix(f'.se.fasta')
+    pe_fasta_file = pathlib.Path(out_file_pattern + '.pe.fasta')
+    se_fasta_file = pathlib.Path(out_file_pattern + '.se.fasta')
     tmp_files.append(pe_fasta_file)
     tmp_files.append(se_fasta_file)
     logging.info(f'Writing paired sequences to FastA:\t{pe_fasta_file}')
@@ -547,8 +562,8 @@ def mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
     logging.info(f'Writing finished')
     # 2. Map reads against database
 
-    pe_m8_file = pathlib.Path(out_file_pattern).with_suffix(f'.pe.m8')
-    se_m8_file = pathlib.Path(out_file_pattern).with_suffix(f'.se.m8')
+    pe_m8_file = pathlib.Path(out_file_pattern + '.pe.m8')
+    se_m8_file = pathlib.Path(out_file_pattern + '.se.m8')
 
 
 
@@ -595,7 +610,7 @@ def mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
 
 
     if enable_binning:
-        of = pathlib.Path(out_file_pattern).with_suffix(f'.bins')
+        of = pathlib.Path(out_file_pattern + '.bins')
         logging.info(f'Start writing:\t{of}')
         with open(of, 'w') as binning_file:
             for insert_name, lca in insert_2_lca.items():
@@ -632,7 +647,7 @@ def mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
 
     for taxrank, counts in all_counts.items():
         if taxrank in REPORT_TAXONOMIC_RANKS:
-            of = pathlib.Path(out_file_pattern).with_suffix(f'.{taxrank}.tsv')
+            of = pathlib.Path(out_file_pattern + f'.{taxrank}.tsv')
             logging.info(f'Start writing:\t{of}')
             with open(of, 'w') as handle:
                 total_assigned_inserts = 0
