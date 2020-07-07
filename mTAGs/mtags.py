@@ -749,7 +749,7 @@ def execute_mtags_merge(args):
 
         with open(out_file_pattern + f'.{taxrank}.tsv', 'w') as outhandle:
             sample_str = '\t'.join(sample_ordered)
-            outhandle.write(f'taxpath\t{sample_str}\n')
+            outhandle.write(f'#taxpath\t{sample_str}\n')
             for taxpath in sorted(taxpath_2_abundances.keys(), reverse=True):
                 abundances = taxpath_2_abundances[taxpath]
                 abundances_str = '\t'.join(map(lambda x: str(x), abundances))
