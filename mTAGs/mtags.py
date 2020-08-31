@@ -27,10 +27,10 @@ import string
 Start Global config section
 '''
 
-MTAGS_CLASSIFY_MIN_PERCID = 97.0  # the minimum perc id of an alignment to be reported
-MTAGS_CLASSIFY_MIN_BITSCORE = 0.0  # the minimum bitscore of an alignment to be considered
-MTAGS_CLASSIFY_MAX_ALIGNMENTS_PER_QUERY = 5000  # maximum number of alignments for each query
-MTAGS_CLASSIFY_TOP_PERCENT = 95.0  # consider only alignments with that range in percentage of best bitscore of alignment
+
+
+
+
 MTAGS_CLASSIFY_MIN_ALIGNMENT_LENGTH = 100  # Minimum length of alignment. In paired end mode both reads have to be longer then this number combined.
 MTAGS_CLASSIFY_QCOV = 0.5
 MTAGS_CLASSIFY_MATCHSCORE = 2
@@ -42,12 +42,6 @@ taxmap = workdir.joinpath('SILVA-138_NR-97_complink_cons.taxmap')
 db_marker_file = workdir.joinpath('download.done')
 
 
-
-R1_SUFFIXES = set(['.1', 'R1', '/1'])
-R2_SUFFIXES = set(['.2', 'R2', '/2'])
-
-
-#ALLOWED_TAXONOMIC_RANKS = ['root', 'domain', 'superkingdom', 'kingdom', 'subkingdom', 'infrakingdom', 'superphylum', 'phylum', 'subphylum', 'superclass', 'class', 'subclass', 'superorder', 'order', 'suborder', 'superfamily', 'family', 'subfamily', 'genus', 'otu'][::-1]
 REPORT_TAXONOMIC_RANKS = ['root', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'otu'][::-1]
 REPORT_TAXONOMIC_INDEXES = set([0, 1, 7, 10, 13, 16, 18, 19])
 
@@ -69,6 +63,10 @@ vsearch_aln = collections.namedtuple('vsearch_aln', 'target qcov percid qstart q
 
 
 class AlignedInsert():
+    """Class that stores all alignments for an individual insert.
+
+
+    """
     __slots__ = ['insert_name', 'is_paired','reference_2_alignments']
 
     def __init__(self, insert_name, is_paired):
@@ -124,29 +122,28 @@ class AlignedInsert():
 
 
 class FastA(object):
-    '''
-    Standard data container for fasta sequences
-    '''
+    """Standard data container for fasta sequences
+    """
     __slots__ = ['header', 'sequence']
     def __init__(self, header: str, sequence: str) -> None:
         self.header = header
         self.sequence = sequence
 
 def revcomp(sequence: str) -> str:
-    '''
+    """
     Reverse complement a standard nucleotide sequence.
     :param sequence:
     :return:
-    '''
+    """
     return str(Seq(sequence, generic_dna).reverse_complement())
 
 def stream_fa(sequence_file: pathlib.Path):
-    '''
+    """
     Read a fastq file either gzipped or not and return it as a stream of tuples
     (Header, Sequence, Quality)
     :param infile:
     :return: Generator[FastA, None, None]
-    '''
+    """
     sequence_file = str(sequence_file)
     if sequence_file.endswith('fq.gz') or sequence_file.endswith('fastq.gz'):
         with gzip.open(sequence_file, 'rt') as handle:
@@ -169,17 +166,21 @@ def stream_fa(sequence_file: pathlib.Path):
 
 
 def startup():
+    """Generic startup method
+    """
     logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.INFO)
     logging.info('Starting mTAGs')
 
 
 def shutdown(status=0):
+    """Generic shutdown method
+    """
     logging.info(f'Finishing mTAGs with status:\t{status}')
     sys.exit(status)
 
 def _i_read_blasttab_file(file):
     """
-    Read and yield an blasttab formatted file.
+    Read and yield a blasttab formatted file.
     if the file ends with *.gz read as gzip
     :param file:
     :return:
@@ -233,6 +234,11 @@ def load_and_parse_vsearch_tab_file(file):
 
 
 def read_and_pair_vsearch_tab_files(pe_m8_file, se_m8_file):
+    """Read and parse the alignments in PE and SE files into memory.
+    Next, it aims to find paired inserts based in names and if they
+    align to the same reference.
+
+    """
     aligned_inserts = {}
     pe_readname_2_alignments = load_and_parse_vsearch_tab_file(pe_m8_file)
     se_readname_2_alignments = load_and_parse_vsearch_tab_file(se_m8_file)
@@ -263,8 +269,7 @@ def read_and_pair_vsearch_tab_files(pe_m8_file, se_m8_file):
 
 
 def lca_vsearch(best_alignments, taxid_2_path):
-    """
-    For every read find the LCA using the taxonomic path in the taxid2map data
+    """For every read find the LCA using the taxonomic path in the taxid2map data
     1. If a read maps uniquely to a reference --> This references is assigned to the read
     2. If a read maps to multiple references --> find the LCA of the references using LTREE LCP (longest common prefix) algorithm
 
@@ -289,6 +294,10 @@ def lca_vsearch(best_alignments, taxid_2_path):
 
 
 def read_id_to_taxpath(taxmap_file):
+    """Helper method to read and parse the
+    taxmap file.
+
+    """
     file = pathlib.Path(taxmap_file)
     assert file.is_file()
     otu_2_path = {}
@@ -326,7 +335,11 @@ def check_call(command: str):
 
 
 def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, readnames, threads: int = 1):
+    """Top level function that takes a fasta/fastq file
+    and searches for reads that potentially come from
+    rRNA genes.
 
+    """
 
     tmp_files = [] # to be deleted at the end of the program
 
@@ -451,6 +464,9 @@ def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, rea
 
 
 def generate_random_sample_name():
+    """Generic helper function to generate random strings
+    that are internally used to rename sequences
+    """
     letters = string.ascii_lowercase
     result_str = ''.join(random.sample(letters, 10))
     return result_str
@@ -510,6 +526,13 @@ def _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
 def execute_mtags_extract(args: list):
     """Entry point for the mTAGs extract method
 
+    This method takes multiple paired/unpaired sequence files
+    And uses HMMer profiles to extract reads that come from
+    rRNA (LSU/SSU) genes. It will throw an error if files
+    cannot be paired or if files are corrupt.
+
+    HMMer has to be installed as a prerequisite
+
     """
     logging.info('Executing command extract')
     parser = argparse.ArgumentParser(
@@ -553,6 +576,8 @@ def execute_mtags_extract(args: list):
 
 
 def test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s):
+    """Method that reads profiles and merges them based on their abundance
+    """
     logging.info('Reading and testing FastA files')
     potentially_paired_sequences = collections.defaultdict(list)
     unpaired_sequences = collections.defaultdict(list)
@@ -601,11 +626,14 @@ def test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfi
 
 
 def mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, database, taxmap, out_file_pattern, threads=4, enable_binning=True, maxaccepts=1000, maxrejects=1000):
+    """Uses reads that are from rRNA genes and aligns them against
+    the clustered Silva database. Next it runs an LCA to taxonomically
+    annotate and bin every sequence to generate a taxonomic profile.
+
+    """
+
     tmp_files = []
-    # 1. Prepare
-    # 1.1. Create 1 R1, 1 R2 and 1 S file with the output pattern
-    # 1.2. Check if you find unpaired sequences in the R1 files
-    #input_seqfile_r1, input_seqfile_r2, input_seqfile_s =
+
 
     logging.info(f'Input files:')
     logging.info(f'\tForward readfiles:')
@@ -751,6 +779,9 @@ def mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
 
 
 def execute_mtags_merge(args):
+    """Top level function to merge
+    mTAGs profiles
+    """
     logging.info('Executing command merge')
     parser = argparse.ArgumentParser(
         description='Merge rRNA profiles generated by the mTAGs tool')
@@ -847,16 +878,14 @@ def execute_mtags_merge(args):
             updated_sample_2_data[sample] = updated_rank_2_lca
         sample_2_data = updated_sample_2_data
 
-        # # remove the current taxrank
-        # import pprint
-        # pprint.pprint(taxpath_2_abundances)
-
 
 
 
 
 
 def execute_mtags_annotate(args):
+    """Top level annotation method from mTAGs
+    """
     logging.info('Executing command annotate')
     parser = argparse.ArgumentParser(
         description='Assigns LCA based taxonomy to rRNA ssu reads.')
@@ -943,6 +972,8 @@ def execute_mtags_annotate(args):
 
 
 def execute_mtags_download():
+    """Top level function to download the mTAGs database
+    """
     database_url = 'https://sunagawalab.ethz.ch/share/MTAGS_DB/silva/s138/SILVA-138_NR-97_complink_cons.vsearch.udb.gz'
     taxmap_url = 'https://sunagawalab.ethz.ch/share/MTAGS_DB/silva/s138/SILVA-138_NR-97_complink_cons.taxmap.gz'
     user = 'mtags'
@@ -964,7 +995,6 @@ def execute_mtags_download():
 
 def _execute_download(url, destfile, user, password):
     """Method to download and extract the mTAGs database
-
     """
 
     p = urllib.request.HTTPPasswordMgrWithDefaultRealm()
@@ -995,6 +1025,11 @@ def _execute_download(url, destfile, user, password):
 
 
 def execute_mtags_profile(args):
+    """Top level mTAGs profile function which combines extraction of rRNA reads
+    from metagenomic samples and annotation of them using a clustered version of
+    the Silva database.
+    """
+
     logging.info('Executing command profile')
     parser = argparse.ArgumentParser(
         description='Extract and taxonomically annotate rRNA reads in metagenomic samples')
@@ -1086,11 +1121,6 @@ def main():
     args = parser.parse_args(sys.argv[1:2])
     startup()
 
-
-
-    '''
-    Paired end read files are identified by name. The names should be identical between the 2 files
-    '''
 
     command = args.command
     if command == 'extract':
