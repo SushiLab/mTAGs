@@ -175,7 +175,10 @@ def startup():
 def shutdown(status=0):
     """Generic shutdown method
     """
-    logging.info(f'Finishing mTAGs with status:\t{status}')
+    if status == 0:
+        logging.info(f'mTAGs finished successfully')
+    else:
+        logging.info(f'mTAGs finished with error code {status}')
     sys.exit(status)
 
 def _i_read_blasttab_file(file):
