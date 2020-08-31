@@ -18,6 +18,8 @@ import urllib.request
 import urllib.response
 import tempfile
 
+import random
+import string
 
 
 
@@ -82,7 +84,7 @@ class AlignedInsert():
         Best alignment is defined by
         1. Having the best score (additive for PE alignments)
         2. Of those, having the shortest alignment length
-        3. Of those check if the alignment length is longer then MITAG_CLASSIFY_MIN_ALIGNMENT_LENGTH
+        3. Of those check if the alignment length is longer then MTAGS_CLASSIFY_MIN_ALIGNMENT_LENGTH
 
         :return: a list with alignments [(reference, score, length), ...] or and empty list of this insert didnt align or was too short
         '''
@@ -323,7 +325,7 @@ def check_call(command: str):
 
 
 
-def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, threads: int = 1):
+def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, readnames, threads: int = 1):
 
 
     tmp_files = [] # to be deleted at the end of the program
@@ -337,18 +339,19 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
 
     tmp_files.append(fasta_forward)
     tmp_files.append(fasta_reverse)
-
+    number_of_input_sequences = 0
     with open(fasta_forward, 'w') as fw_handle:
         with open(fasta_reverse, 'w') as rev_handle:
             for number_of_sequences, fasta in enumerate(stream_fa(input_seq_file), 1):
                 if number_of_sequences % 1000000 == 0:
                     logging.info(f'Processed reads:\t{number_of_sequences}')
                 header = fasta.header.split()[0]#re.sub('\s+', '_', fasta.header)
-                fw_handle.write(f'>{header}\n{fasta.sequence}\n')
-                rev_handle.write(f'>{header}\n{revcomp(fasta.sequence)}\n')
+                fw_handle.write(f'>{readnames}.{number_of_sequences}\n{fasta.sequence}\n')
+                rev_handle.write(f'>{readnames}.{number_of_sequences}\n{revcomp(fasta.sequence)}\n')
     logging.info(f'Processed reads:\t{number_of_sequences}')
     logging.info(f'Finished extracting. Found {number_of_sequences} sequences.')
 
+    number_of_input_sequences = number_of_sequences
 
 
     logging.info(f'Start detecting rRNA sequences in FastA files')
@@ -396,6 +399,8 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
 
     logging.info(f'Start extracting reads/writing output')
     writers = {}
+    ssu_files = []
+    lsu_files = []
     stats = collections.Counter()
     fasta_iterator = stream_fa(str(fasta_forward))
     for number_of_sequences, fasta in enumerate(fasta_iterator, 1):
@@ -409,6 +414,14 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
             writer = writers.get(best_assignment[0], None)
             if not writer:
                 o_file = output_folder.joinpath(f'{samplename}_{best_assignment[0]}.fasta')
+                if str(o_file).endswith('ssu.fasta'):
+                    ssu_files.append(o_file)
+                elif str(o_file).endswith('lsu.fasta'):
+                    lsu_files.append(o_file)
+                else:
+                    logging.error(f'Unkown output file:\t{o_file}')
+                    shutdown(1)
+
                 writer = open(o_file, 'w')
                 writers[best_assignment[0]] = writer
             writer.write(f'>{header}\n{fasta.sequence}\n')
@@ -421,6 +434,7 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
     for tmpfile in tmp_files:
         tmpfile.unlink()
 
+    return (number_of_input_sequences, ssu_files, lsu_files)
 
 
 
@@ -436,43 +450,107 @@ def mitag_find(input_seq_file: pathlib.Path, output_folder: pathlib.Path, thread
 
 
 
+def generate_random_sample_name():
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.sample(letters, 10))
+    return result_str
 
 
-def execute_mitag_find(args: list):
-    logging.info('Executing command find')
+def _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, output_folder, threads):
+    """Helper function to run mTAG extract
+
+    """
+    assert threads > 0
+
+
+    if not input_seqfiles_r1:
+        input_seqfiles_r1 = []
+    if not input_seqfiles_r2:
+        input_seqfiles_r2 = []
+    if not input_seqfiles_s:
+        input_seqfiles_s = []
+
+
+    for input_seqfile in itertools.chain(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s):
+        if pathlib.Path(input_seqfile).exists() and pathlib.Path(input_seqfile).is_file():
+            continue
+        else:
+            logging.error(f'Input file {input_seqfile} does not exist or is not file.')
+            shutdown(1)
+    if len(input_seqfiles_r1) != len(input_seqfiles_r2):
+        logging.error(f'Different number of R1 and R2 files provided. #R1={len(input_seqfiles_r1)}, #R2={len(input_seqfiles_r2)}')
+        shutdown(1)
+
+    if output_folder.is_file():
+        logging.error('Output folder exists and is file. Select folder.')
+        shutdown(1)
+    output_folder.mkdir(parents=True, exist_ok=True)
+    all_ssu_files_r1 = []
+    all_ssu_files_r2 = []
+    all_ssu_files_s = []
+    for input_seqfile_r1, input_seqfile_r2 in zip(input_seqfiles_r1, input_seqfiles_r2):
+        readnames = generate_random_sample_name()
+        (reads_r1, ssu_files_r1, lsu_file_r1) = mtags_extract(pathlib.Path(input_seqfile_r1), output_folder, readnames, threads=threads)
+        (reads_r2, ssu_files_r2, lsu_file_r2) = mtags_extract(pathlib.Path(input_seqfile_r2), output_folder, readnames, threads=threads)
+        all_ssu_files_r1 = all_ssu_files_r1 + ssu_files_r1
+        all_ssu_files_r2 = all_ssu_files_r2 + ssu_files_r2
+        if reads_r1 != reads_r2:
+            logging.error(f'R1 and R2 files have different number of reads. Files are potentially corrupt. Quitting')
+            shutdown(1)
+    for input_seqfile_s in input_seqfiles_s:
+        readnames = generate_random_sample_name()
+        (reads_s, ssu_files_s, lsu_file_s) = mtags_extract(pathlib.Path(input_seqfile_s), output_folder, readnames, threads=threads)
+        all_ssu_files_s = all_ssu_files_s + ssu_files_s
+    return (all_ssu_files_r1, all_ssu_files_r2, all_ssu_files_s)
+
+
+
+
+
+def execute_mtags_extract(args: list):
+    """Entry point for the mTAGs extract method
+
+    """
+    logging.info('Executing command extract')
     parser = argparse.ArgumentParser(
-        description='Takes a sequence file and extracts sequences that likely come from SSU/LSU genes.')
+        description='Extract rRNA reads in metagenomic samples')
 
-    parser.add_argument('-i', action='store', dest='input', help='Input fq/fa file. Can be gzipped.', required=True)
+    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
+    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
+    parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.', default=[])
     parser.add_argument('-o', action='store', dest='output',help='Output folder.', required=True)
     parser.add_argument('-t', action='store', dest='threads', help='Number of threads for hmmsearch.',
-                        default=1, type=int, choices=[1,2,4,8])
-
-
-    results = parser.parse_args(args)
-
-
+                        default=1, type=int)
 
     if len(args) == 0:
         parser.print_help()
         shutdown(0)
 
-    input_seq_file = pathlib.Path(results.input)
+    results = parser.parse_args(args)
+
+    #######
+    #Input#
+    #######
+    input_seqfiles_r1 = results.i1
+    input_seqfiles_r2 = results.i2
+    input_seqfiles_s = results.im
+
+    ########
+    #Output#
+    ########
     output_folder = pathlib.Path(results.output)
+
+    ########
+    #Params#
+    ########
     threads = results.threads
 
-    if not input_seq_file.is_file():
-        logging.error(f'Input {input_seq_file} file does not exist.')
-        shutdown(1)
-    if output_folder.is_file():
-        logging.error('Output folder exist and is file. Select folder')
-        shutdown(1)
-    output_folder.mkdir(parents=True, exist_ok=True)
+
+    ssu_files = _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, output_folder, threads)
 
 
 
 
-    mitag_find(input_seq_file, output_folder, threads=threads)
 
 def test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s):
     logging.info('Reading and testing FastA files')
@@ -522,7 +600,7 @@ def test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfi
 
 
 
-def mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, database, taxmap, out_file_pattern, threads=4, enable_binning=True, maxaccepts=1000, maxrejects=1000):
+def mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, database, taxmap, out_file_pattern, threads=4, enable_binning=True, maxaccepts=1000, maxrejects=1000):
     tmp_files = []
     # 1. Prepare
     # 1.1. Create 1 R1, 1 R2 and 1 S file with the output pattern
@@ -778,7 +856,7 @@ def execute_mtags_merge(args):
 
 
 
-def execute_mitag_annotate(args):
+def execute_mtags_annotate(args):
     logging.info('Executing command annotate')
     parser = argparse.ArgumentParser(
         description='Assigns LCA based taxonomy to rRNA ssu reads.')
@@ -789,11 +867,10 @@ def execute_mitag_annotate(args):
 
     parser.add_argument('-o', action='store', dest='o',help='Output pattern. This pattern will be prepended to all output files',required=True)
     parser.add_argument('-t', action='store', dest='t', help='Number of threads for vsearch alignment', default=4, type=int)
-    #parser.add_argument('-d', action='store', dest='db', help='Path to the vsearch database (udb or fasta)', required=True)
+
     parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
     parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=100', default=100, type=int)
-    #parser.add_argument('-m', action='store', dest='tm', help='Taxmap file that maps tax ids to taxonomic path.', required=True)
-    #parser.add_argument('-b', dest='bin', help='Enable binning - write taxonomic assignment for each read/insert', action='store_true', default=True)
+
     results = parser.parse_args(args)
     if len(args) == 0:
         parser.print_help()
@@ -805,8 +882,7 @@ def execute_mitag_annotate(args):
     input_seqfiles_r2 = results.i2
     input_seqfiles_s = results.im
 
-    #database = results.db
-    #taxmap = results.tm
+
 
     ########
     #Output#
@@ -818,7 +894,6 @@ def execute_mitag_annotate(args):
     #Params#
     ########
     threads = results.t
-    #enable_binning = results.bin
     enable_binning = True
     maxaccepts = results.ma
     maxrejects = results.mr
@@ -861,7 +936,7 @@ def execute_mitag_annotate(args):
         logging.error(f'The output pattern cannot be a directory.')
         shutdown(1)
     pathlib.Path(out_file_pattern).parent.mkdir(parents=True, exist_ok=True)
-    mitag_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, database, taxmap, out_file_pattern, threads=threads, enable_binning=enable_binning, maxaccepts=maxaccepts, maxrejects=maxrejects)
+    mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, database, taxmap, out_file_pattern, threads=threads, enable_binning=enable_binning, maxaccepts=maxaccepts, maxrejects=maxrejects)
     logging.info('Finished annotate command')
 
 
@@ -919,36 +994,119 @@ def _execute_download(url, destfile, user, password):
 
 
 
+def execute_mtags_profile(args):
+    logging.info('Executing command profile')
+    parser = argparse.ArgumentParser(
+        description='Extract and taxonomically annotate rRNA reads in metagenomic samples')
+
+    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
+    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
+    parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.')
+
+    parser.add_argument('-o', action='store', dest='output',help='Output folder.', required=True)
+    parser.add_argument('-s', action='store', dest='sample', help='Samplename', required=True)
+
+    parser.add_argument('-t', action='store', dest='threads', help='Number of threads.', default=4, type=int)
+
+    parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
+    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=100', default=100, type=int)
+
+
+    if len(args) == 0:
+        parser.print_help()
+        shutdown(0)
+
+    results = parser.parse_args(args)
+
+
+    #######
+    # Input#
+    #######
+    input_seqfiles_r1 = results.i1
+    input_seqfiles_r2 = results.i2
+    input_seqfiles_s = results.im
+
+    ########
+    # Output#
+    ########
+    output_folder = pathlib.Path(results.output)
+
+    ########
+    # Params#
+    ########
+    threads = results.threads
+    samplename = results.sample
+    enable_binning = True
+    maxaccepts = results.ma
+    maxrejects = results.mr
+
+
+    ssu_files = _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, output_folder, threads)
+
+
+    if not db_marker_file.exists():
+        logging.error(f'The database is not downloaded. Please run `mtags download` first')
+        shutdown(1)
+
+
+
+    if output_folder.joinpath(samplename).is_dir():
+        logging.error(f'The output pattern cannot be a directory.')
+        shutdown(1)
+
+    output_folder.mkdir(parents=True, exist_ok=True)
+    mtags_annotate_vsearch(ssu_files[0], ssu_files[1], ssu_files[2], database, taxmap, str(output_folder.joinpath(samplename)), threads=threads, enable_binning=enable_binning, maxaccepts=maxaccepts, maxrejects=maxrejects)
+    logging.info('Finished annotate command')
+
+
+
 def main():
-    parser = argparse.ArgumentParser(description='A toolkit to extract and annotate rRNA reads from metagenomic data',
+    parser = argparse.ArgumentParser(description='A toolkit to extract and quantify rRNA reads from metagenomic data',
                                      usage='''mtags <command> [<args>]
-    Command options
-        download    Download the mTAGs database
-        find        Searches for potential rRNA reads in metagenomic samples. (First step)
-        annotate    Annotate and quantify rRNA reads. (Second Step)
-        merge       Merge profiles 
+    
+    [General]
+    
+        profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
+        merge       Merge profiles
+    
+    [Expert]
+    
+        extract     Extract rRNA reads in metagenomic samples
+        annotate    Annotate and quantify rRNA reads
+    
+    [Installation] 
+    
+        download    Download the mTAGs database - Once after download of the tool
+        
     ''')
 
-    parser.add_argument('command', help='Subcommand to run: find|annotate|download', choices=['find', 'annotate', 'download', 'merge'])
+    parser.add_argument('command', help='Subcommand to run: profile|merge|extract|annotate|download', choices=['profile', 'merge', 'extract', 'annotate', 'download'])
+
 
     args = parser.parse_args(sys.argv[1:2])
     startup()
+
+
+
     '''
     Paired end read files are identified by name. The names should be identical between the 2 files
     '''
 
     command = args.command
-    if command == 'find':
-        execute_mitag_find(sys.argv[2:])
+    if command == 'extract':
+        execute_mtags_extract(sys.argv[2:])
         shutdown(0)
     elif command == 'annotate':
-        execute_mitag_annotate(sys.argv[2:])
+        execute_mtags_annotate(sys.argv[2:])
         shutdown(0)
     elif command == 'download':
         execute_mtags_download()
         shutdown(0)
     elif command == 'merge':
         execute_mtags_merge(sys.argv[2:])
+        shutdown(0)
+    elif command == 'profile':
+        execute_mtags_profile(sys.argv[2:])
         shutdown(0)
     else:
         parser.print_help()
