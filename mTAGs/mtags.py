@@ -37,9 +37,12 @@ MTAGS_CLASSIFY_MATCHSCORE = 2
 MTAGS_CLASSIFY_MISMATCHSCORE = -4
 
 workdir = pathlib.Path(__file__).absolute().parent.parent.joinpath('db')
-database = workdir.joinpath('SILVA-138_NR-97_complink_cons.vsearch.udb')
-taxmap = workdir.joinpath('SILVA-138_NR-97_complink_cons.taxmap')
+_database138 = workdir.joinpath('SILVA-138_NR-97_complink_cons.vsearch.udb')
+_taxmap138 = workdir.joinpath('SILVA-138_NR-97_complink_cons.taxmap')
+_database128 = workdir.joinpath('SILVA-128_NR-97_complink_cons.vsearch.udb')
+_taxmap128 = workdir.joinpath('SILVA-128_NR-97_complink_cons.taxmap')
 db_marker_file = workdir.joinpath('download.done')
+
 
 
 REPORT_TAXONOMIC_RANKS = ['root', 'domain', 'phylum', 'class', 'order', 'family', 'genus', 'otu'][::-1]
@@ -59,6 +62,15 @@ End Global config section
 vsearch_aln = collections.namedtuple('vsearch_aln', 'target qcov percid qstart qend rstart rend alnlength matches mismatches gaps, strand')
 
 
+def get_database():
+    print(_database128.exists())
+    if _database138.exists() and _taxmap138.exists():
+        return _database138, _taxmap138
+    elif _database128.exists() and _taxmap128.exists():
+        return _database128, _taxmap128
+
+    logging.error('No valid database found. Use mtag download before start profiling') 
+    shutdown(status=1)
 
 
 
@@ -903,7 +915,7 @@ def execute_mtags_annotate(args):
     parser.add_argument('-t', action='store', dest='t', help='Number of threads for vsearch alignment', default=4, type=int)
 
     parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
-    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=100', default=100, type=int)
+    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
 
     results = parser.parse_args(args)
     if len(args) == 0:
@@ -965,6 +977,7 @@ def execute_mtags_annotate(args):
         shutdown(1)
 
 
+    database, taxmap = get_database()
 
     if pathlib.Path(out_file_pattern).is_dir():
         logging.error(f'The output pattern cannot be a directory.')
@@ -991,8 +1004,8 @@ def execute_mtags_download():
         
         logging.info('Start downloading the mTAGs database. ~600MB')
         workdir.mkdir(parents=True, exist_ok=True)
-        _execute_download(database_url, database, user, password)
-        _execute_download(taxmap_url, taxmap, user, password)
+        _execute_download(database_url, _database138, user, password)
+        _execute_download(taxmap_url, _taxmap138, user, password)
 
         db_marker_file.touch(exist_ok=True)
         logging.info('Finished downloading the mTAGs database.')
@@ -1049,7 +1062,7 @@ def execute_mtags_profile(args):
     parser.add_argument('-t', action='store', dest='threads', help='Number of threads.', default=4, type=int)
 
     parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
-    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=100', default=100, type=int)
+    parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
 
 
     if len(args) == 0:
@@ -1088,7 +1101,7 @@ def execute_mtags_profile(args):
         logging.error(f'The database is not downloaded. Please run `mtags download` first')
         shutdown(1)
 
-
+    database, taxmap = get_database()
 
     if output_folder.joinpath(samplename).is_dir():
         logging.error(f'The output pattern cannot be a directory.')
