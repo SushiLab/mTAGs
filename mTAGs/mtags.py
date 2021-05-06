@@ -352,21 +352,23 @@ def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, rea
     # Create forward fasta file in workdir
     fasta_forward = output_folder.joinpath(f'{samplename}_fw.fasta')
     fasta_reverse = output_folder.joinpath(f'{samplename}_rev.fasta')
-
+    fasta_map = output_folder.joinpath(f'{samplename}_read.map')
     tmp_files.append(fasta_forward)
     tmp_files.append(fasta_reverse)
     number_of_input_sequences = 0
+    fasta_map_file = open(fasta_map, 'w')
     with open(fasta_forward, 'w') as fw_handle:
         with open(fasta_reverse, 'w') as rev_handle:
             for number_of_sequences, fasta in enumerate(stream_fa(input_seq_file), 1):
                 if number_of_sequences % 1000000 == 0:
                     logging.info(f'Processed reads:\t{number_of_sequences}')
                 header = fasta.header.split()[0]#re.sub('\s+', '_', fasta.header)
+                fasta_map_file.write(f'{header}\t{readnames}.{number_of_sequences}\n')
                 fw_handle.write(f'>{readnames}.{number_of_sequences}\n{fasta.sequence}\n')
                 rev_handle.write(f'>{readnames}.{number_of_sequences}\n{revcomp(fasta.sequence)}\n')
     logging.info(f'Processed reads:\t{number_of_sequences}')
     logging.info(f'Finished extracting. Found {number_of_sequences} sequences.')
-
+    fasta_map_file.close()
     number_of_input_sequences = number_of_sequences
 
 
@@ -937,8 +939,8 @@ def execute_mtags_annotate(args):
     ########
 
     assert threads > 0
-    assert maxaccepts > 0
-    assert maxrejects > 0
+    assert maxaccepts >= 0
+    assert maxrejects >= 0
 
     if not input_seqfiles_r1:
         input_seqfiles_r1 = []
