@@ -1,6 +1,19 @@
+
 # mTAGs: accurate OTU level taxonomic profiling of metagenomes using full-length rRNA degenerate consensus references
 
 Profile metagenomes by finding rRNA sequences and annotating them using a degenerate consensus references for higher sensitivity.
+
+
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+  * [1. Profile](#1-profile)
+  * [2. Merge profiles](#2-merge-profiles)
+- [The Output](#the-output)
+  * [The profile](#the-profile)
+  * [Single insert annotation](#single-insert-annotation)
+- [References](#references)
+
 
 
 
@@ -21,7 +34,7 @@ references"
 
 
 
-## Installation:
+## Installation
 
 
 mTAGs is written in Python3 and can be installed via `pip`. The tool has 3 dependencies that need to be installed in advance:
@@ -85,9 +98,11 @@ $ mtags download
 ```
 
 
+
 ## Usage
 
 The tool is split in to two steps. The first step uses HMM models to **extract** potential rRNA sequences from metagenomic data and aligns these sequences against a modified SILVA database and **annotate**s sequences taxonomically. The second step is a function that **merge**s profiles. (The steps **extract** and **annotate** are grouped into a single command **profile**)
+
 
 
 ### 1. Profile
@@ -371,6 +386,8 @@ $ mtags merge -i *bins -o merged_profile
 2020-07-07 16:36:06,749 INFO: Finished reading sample4.mTAG.bins. Found 34954 inserts.
 
 ```
+
+
 
 ## The Output
 
