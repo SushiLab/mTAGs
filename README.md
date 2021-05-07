@@ -7,11 +7,12 @@ Profile metagenomes by finding rRNA sequences and annotating them using a degene
 - [Overview](#overview)
 - [Installation](#installation)
 - [Usage](#usage)
-  * [1. Profile](#1-profile)
-  * [2. Merge profiles](#2-merge-profiles)
-- [The Output](#the-output)
-  * [The profile](#the-profile)
+  * [Profile](#profile)
+  * [Merge profiles](#merge-profiles)
+- [Output](#output)
+  * [Profile file](#profile-file)
   * [Single insert annotation](#single-insert-annotation)
+- [Database](#database)
 - [References](#references)
 
 
@@ -105,7 +106,7 @@ The tool is split in to two steps. The first step uses HMM models to **extract**
 
 
 
-### 1. Profile
+### Profile
 
 This step uses precomputed HMM models to extract rRNA sequences from a metagenomic sample. The rRNA sequences are then aligned against a clustered Silva database to annotate sequences and profile samples.
 
@@ -357,7 +358,7 @@ Matching unique query sequences: 33561 of 33788 (99.33%)
 
 ```
 
-### 2. Merge profiles
+### Merge profiles
 
 The previous step produces profiles for different samples. It is useful for analysis purposes to have smultiple profiles in one file. The merge function combines multiple profiles into a tab-separated file with each column representating a column:
 
@@ -389,11 +390,11 @@ $ mtags merge -i *bins -o merged_profile
 
 
 
-## The Output
+## Output
 
 The tool produces two types of output, the taxonomic profiles and the annotation of every insert.
 
-### The profile
+### Profile file
 
 The tool produces profiles for 8 taxonomic ranks:
 
@@ -461,6 +462,27 @@ HISEQ:384:HCVGNBCXY:1:1103:19448:91267  otu     root__Root;domain__Eukaryota;phy
 HISEQ:384:HCVGNBCXY:1:1103:2033:80107   domain  root__Root;domain__Unaligned
 HISEQ:384:HCVGNBCXY:1:1103:14200:48593  family  root__Root;domain__Eukaryota;phylum__Ascomycota;class__Sordariomycetes;order__Xylariales;family__unknown
 ```
+
+## Database
+
+The default database of mTAGs is a modified version of the Silva release 138. We cluster the database at genus level using a complete linkage algorithm on pairwise distances and then build one consensus sequence per cluster. We also generated a database from Silva release 128 using the same strategy for reproducibility reasons. However, we encourage users to perform their analysis with most recent database version.
+
+```bash
+# Use Silva release 128
+
+$ cd mTAGs
+
+# move default database 
+$ mv db db_r138
+# create database folder for release 128
+$ mkdir db
+$ cd db
+$ wget https://sunagawalab.ethz.ch/share/MTAGS_DB/silva/s128/SILVA-128_NR-97_complink_cons.vsearch.udb.gz
+$ wget https://sunagawalab.ethz.ch/share/MTAGS_DB/silva/s128/SILVA-128_NR-97_complink_cons.taxmap.gz
+$ gunzip *gz
+$ touch download.done
+```
+Using mTAGs will now use release version 128 of the database.
 
 
 ## References
