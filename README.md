@@ -1,5 +1,5 @@
 
-# mTAGs: accurate OTU level taxonomic profiling of metagenomes using full-length rRNA degenerate consensus references
+# mTAGs: taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA genes
 
 Profile metagenomes by finding rRNA sequences and annotating them using a degenerate consensus references for higher sensitivity.
 
