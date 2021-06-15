@@ -1,4 +1,5 @@
-## mTAGs: taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA genes
+## mTAGs: taxonomic profiling using degenerate consensus 
+## reference sequences of ribosomal RNA genes
 
 <p align="center">
 <img src="img/mtags_logo.png" width="500"  />
