@@ -31,9 +31,8 @@ Questions/Comments? We're happy to help you via GitHub issues.
 If you use mTAGs in a published work, please cite:
 
 ```
-Guillem Salazar, Hans-Joachim Ruscheweyh, TODO, Shinichi Sunagawa. "mTAGs: accurate OTU 
-level taxonomic profiling of metagenomes using full-length rRNA degenerate consensus 
-references"
+Guillem Salazar, Hans-Joachim Ruscheweyh, Falk Hildebrand, Silvia G. Acinas and Shinichi Sunagawa. "mTAGs: taxonomic profiling using degenerate
+consensus reference sequences of ribosomal RNA genes"
 ```
 
 
