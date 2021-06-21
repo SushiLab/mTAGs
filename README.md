@@ -1,4 +1,4 @@
-## mTAGs: taxonomic profiling using degenerate <br> consensus reference sequences of ribosomal RNA genes
+# mTAGs: taxonomic profiling using degenerate <br> consensus reference sequences of ribosomal RNA genes
 
 <p align="center">
 <img src="img/mtags_logo.png" width="500"  />
@@ -7,51 +7,50 @@
 Profile metagenomes by finding rRNA sequences and annotating them using a degenerate consensus references for higher sensitivity.
 
 
+
+
 - [Overview](#overview)
 - [Installation](#installation)
 - [Usage](#usage)
-  * [Profile](#profile)
-  * [Merge profiles](#merge-profiles)
+	* [Profile](#profile)
+	* [Merge profiles](#merge-profiles)
 - [Output](#output)
-  * [Profile file](#profile-file)
-  * [Single insert annotation](#single-insert-annotation)
+	* [Profile file](#profile-file)
+	* [Single insert annotation](#single-insert-annotation)
 - [Database](#database)
 - [References](#references)
-
-
-
 
 ## Overview
 
 
-The tool is designed by Hans-Joachim Ruscheweyh and Guillem Salazar and distributed under the GPLv3 license. 
-
-Questions/Comments? We're happy to help you via GitHub issues.
-
-If you use mTAGs in a published work, please cite:
-
-```
-Guillem Salazar, Hans-Joachim Ruscheweyh, Falk Hildebrand, Silvia G. Acinas and Shinichi Sunagawa. "mTAGs: taxonomic profiling using degenerate
-consensus reference sequences of ribosomal RNA genes"
-```
+The tool is developed by Hans-Joachim Ruscheweyh and Guillem Salazar and distributed under the [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 
+If you use mTAGs, please cite:
+
+
+> Salazar G\*, Ruscheweyh H-J\*, Hildebrand F, Acinas S and Sunagawa S. **mTAGs: taxonomic profiling using degenerate
+consensus reference sequences of ribosomal RNA gene.** *Bioinformatics*, 2021.
+
+Analyses in the publication were executed using version 1.0.0
+
+Questions/Comments? Write a github issue.
 
 ## Installation
 
 
-mTAGs is written in Python3 and can be installed via `pip`. The tool has 3 dependencies that need to be installed in advance:
+mTAGs is written in Python and can be installed via `pip`. The tool has 3 dependencies that need to be installed in advance:
 
 
+- [Python 3](https://www.python.org/) (tested: v3.7)
+- [vsearch](https://github.com/torognes/vsearch/) (tested: v2.15.0)
+- [hmmer](http://hmmer.org/) (tested: v3.3)
 
 
-1. `vsearch>=2.14.0`
-2. `Python>=3.7`
-3. `hmmer>=3.3`
 
 This can be done manually or using conda:
 
-```
+```bash
 $ conda create -n mtags python=3.7 hmmer vsearch
 $ source activate mtags
 # or
@@ -67,25 +66,30 @@ $ git clone https://github.com/SushiLab/mTAGs.git
 $ cd mTAGs
 $ pip install -r requirements.txt -e . 
 
-# Test if installation was successful
+# Test whether installation was successful
 
 $ mtags
 
-usage: mtags <command> [<args>]
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    1.0.0
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
+            degenerate consensus reference sequences of ribosomal RNA
+            gene. Bioinformatics (2021)
 
-    [General]
+Usage: mtags <command> [options]
+Command:
 
-        profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
-        merge       Merge profiles
+-- General
+    profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
+    merge       Merge profiles
 
-    [Expert]
+-- Expert
+    extract     Extract rRNA reads in metagenomic samples
+    annotate    Annotate and quantify rRNA reads
 
-        extract     Extract rRNA reads in metagenomic samples
-        annotate    Annotate and quantify rRNA reads
-
-    [Installation]
-
-        download    Download the mTAGs database - Once after download of the tool
+-- Installation
+    download    Download the mTAGs database - Once after download of the tool
 
 ```
 
@@ -94,10 +98,10 @@ The database needs to be downloaded in the last step of the installation. This n
 ```
 $ mtags download
 
-2020-07-03 12:02:40,294 INFO: Starting mTAGs
-2020-07-03 12:02:40,294 INFO: Start downloading the mTAGs database. ~600MB
-2020-07-03 12:05:17,883 INFO: Finished downloading the mTAGs database.
-2020-07-03 12:05:17,883 INFO: Finishing mTAGs
+2021-06-21 12:02:40,294 INFO: Starting mTAGs
+2021-06-21 12:02:40,294 INFO: Start downloading the mTAGs database. ~600MB
+2021-06-21 12:05:17,883 INFO: Finished downloading the mTAGs database.
+2021-06-21 12:05:17,883 INFO: Finishing mTAGs
 ```
 
 
@@ -117,248 +121,238 @@ This step uses precomputed HMM models to extract rRNA sequences from a metagenom
 ```bash
 
 $ mtags profile
-2020-08-31 17:58:18,259 INFO: Starting mTAGs
-2020-08-31 17:58:18,260 INFO: Executing command profile
-usage: mtags [-h] [-i1 I1 [I1 ...]] [-i2 I2 [I2 ...]] [-is IM [IM ...]] -o
-             OUTPUT -s SAMPLE [-t THREADS] [-ma MA] [-mr MR]
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    1.0.0
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
+            degenerate consensus reference sequences of ribosomal RNA
+            gene. Bioinformatics (2021)
 
-Extract and taxonomically annotate rRNA reads in metagenomic samples
+Usage: mtags profile [options]
 
-optional arguments:
-  -h, --help       show this help message and exit
-  -i1 I1 [I1 ...]  Input forward reads files. Can be fasta/fastq and gzipped.
-                   The order of the files has to match the order in -i2. Read
-                   pairs in files are identified by the identical name in -i2.
-  -i2 I2 [I2 ...]  Input reverse reads files. Can be fasta/fastq and gzipped.
-                   The order of the files has to match the order in -i1. Read
-                   pairs in files are identified by the identical name in -i1.
-  -is IM [IM ...]  Input merged/single-end reads files. Can be fasta/fastq and
-                   gzipped.
-  -o OUTPUT        Output folder.
-  -s SAMPLE        Samplename
-  -t THREADS       Number of threads.
-  -ma MA           Maxaccepts, vsearch parameter. Larger numbers increase
-                   sensitivity and runtime. default=1000
-  -mr MR           Maxrejects, vsearch parameter. Larger numbers increase
-                   sensitivity and runtime. default=100
-2020-08-31 17:58:18,263 INFO: Finishing mTAGs with status:
+Input options:
+    -f  FILE [FILE ...]   Forward reads file. Can be fasta/fastq and gzipped.
+    -r  FILE [FILE ...]   Reverse reads file. Can be fasta/fastq and gzipped.
+    -s  FILE [FILE ...]   Single/merge reads file. Can be fasta/fastq and gzipped.
+
+Output options:
+    -o  DIR               Output folder [Required]
+
+Other options:
+    -n  STR               Samplename [Required]
+    -t  INT               Number of threads. [4]
+    -ma INT               Maxaccepts, vsearch parameter. Larger
+                          numbers increase sensitivity and runtime. [1000]
+    -mr INT               Maxrejects, vsearch parameter. Larger
+                          numbers increase sensitivity and runtime. [1000]
 
 
-$ mtags profile -i1 sample.1.fq.gz -i2 sample.2.fq.gz -is sample.s.fq.gz sample.m.fq.gz -o output -t 4 -s sample -ma 100 -mr 100
-2020-08-31 18:00:09,940 INFO: Starting mTAGs
-2020-08-31 18:00:09,940 INFO: Executing command profile
-2020-08-31 18:00:09,942 INFO: Extracting FastA and revcomp FastA from sample.1.fq.gz
-2020-08-31 18:00:20,207 INFO: Processed reads:	1000000
-2020-08-31 18:00:30,471 INFO: Processed reads:	2000000
-2020-08-31 18:00:40,969 INFO: Processed reads:	3000000
-2020-08-31 18:00:51,208 INFO: Processed reads:	4000000
-2020-08-31 18:00:53,419 INFO: Processed reads:	4223475
-2020-08-31 18:00:53,419 INFO: Finished extracting. Found 4223475 sequences.
-2020-08-31 18:00:53,419 INFO: Start detecting rRNA sequences in FastA files
-2020-08-31 18:00:53,419 INFO: Start detecting rRNA sequences for molecule=ssu
-2020-08-31 18:00:53,419 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.1.fq.gz_fw.fasta_ssu.hmmer --domtblout output/sample.1.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.1.fq.gz_fw.fasta
-2020-08-31 18:01:24,679 INFO: Finished hmmsearch
-2020-08-31 18:01:24,775 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.1.fq.gz_rev.fasta_ssu.hmmer --domtblout output/sample.1.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.1.fq.gz_rev.fasta
-2020-08-31 18:01:57,804 INFO: Finished hmmsearch
-2020-08-31 18:01:57,898 INFO: Finished detecting rRNA sequences for molecule=ssu
-2020-08-31 18:01:57,898 INFO: Start detecting rRNA sequences for molecule=lsu
-2020-08-31 18:01:57,898 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.1.fq.gz_fw.fasta_lsu.hmmer --domtblout output/sample.1.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.1.fq.gz_fw.fasta
-2020-08-31 18:03:48,873 INFO: Finished hmmsearch
-2020-08-31 18:03:48,960 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.1.fq.gz_rev.fasta_lsu.hmmer --domtblout output/sample.1.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.1.fq.gz_rev.fasta
-2020-08-31 18:05:30,688 INFO: Finished hmmsearch
-2020-08-31 18:05:30,808 INFO: Finished detecting rRNA sequences for molecule=lsu
-2020-08-31 18:05:30,808 INFO: Found 56171 potential rRNA sequences.
-2020-08-31 18:05:30,808 INFO: Finished detecting rRNA sequences from FastA files.
-2020-08-31 18:05:30,808 INFO: Finding best molecule for each read
-2020-08-31 18:05:30,888 INFO: Finished finding best molecule for each read
-2020-08-31 18:05:30,888 INFO: Start extracting reads/writing output
-2020-08-31 18:05:34,105 INFO: Processed reads:	1000000
-2020-08-31 18:05:37,198 INFO: Processed reads:	2000000
-2020-08-31 18:05:40,274 INFO: Processed reads:	3000000
-2020-08-31 18:05:43,292 INFO: Processed reads:	4000000
-2020-08-31 18:05:43,981 INFO: Processed reads:	4223475
-2020-08-31 18:05:43,982 INFO: Finished extracting reads/writing output
-2020-08-31 18:05:43,983 INFO: bac_lsu	37112
-2020-08-31 18:05:43,983 INFO: bac_ssu	18877
-2020-08-31 18:05:43,983 INFO: arc_ssu	97
-2020-08-31 18:05:43,983 INFO: arc_lsu	83
-2020-08-31 18:05:43,983 INFO: euk_lsu	2
-2020-08-31 18:05:44,066 INFO: Extracting FastA and revcomp FastA from sample.2.fq.gz
-2020-08-31 18:05:54,509 INFO: Processed reads:	1000000
-2020-08-31 18:06:04,598 INFO: Processed reads:	2000000
-2020-08-31 18:06:14,645 INFO: Processed reads:	3000000
-2020-08-31 18:06:25,100 INFO: Processed reads:	4000000
-2020-08-31 18:06:27,371 INFO: Processed reads:	4223475
-2020-08-31 18:06:27,371 INFO: Finished extracting. Found 4223475 sequences.
-2020-08-31 18:06:27,371 INFO: Start detecting rRNA sequences in FastA files
-2020-08-31 18:06:27,371 INFO: Start detecting rRNA sequences for molecule=ssu
-2020-08-31 18:06:27,371 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.2.fq.gz_fw.fasta_ssu.hmmer --domtblout output/sample.2.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.2.fq.gz_fw.fasta
-2020-08-31 18:06:57,558 INFO: Finished hmmsearch
-2020-08-31 18:06:57,687 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.2.fq.gz_rev.fasta_ssu.hmmer --domtblout output/sample.2.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.2.fq.gz_rev.fasta
-2020-08-31 18:07:28,056 INFO: Finished hmmsearch
-2020-08-31 18:07:28,153 INFO: Finished detecting rRNA sequences for molecule=ssu
-2020-08-31 18:07:28,153 INFO: Start detecting rRNA sequences for molecule=lsu
-2020-08-31 18:07:28,153 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.2.fq.gz_fw.fasta_lsu.hmmer --domtblout output/sample.2.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.2.fq.gz_fw.fasta
-2020-08-31 18:09:08,830 INFO: Finished hmmsearch
-2020-08-31 18:09:08,938 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.2.fq.gz_rev.fasta_lsu.hmmer --domtblout output/sample.2.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.2.fq.gz_rev.fasta
-2020-08-31 18:10:52,109 INFO: Finished hmmsearch
-2020-08-31 18:10:52,198 INFO: Finished detecting rRNA sequences for molecule=lsu
-2020-08-31 18:10:52,199 INFO: Found 55897 potential rRNA sequences.
-2020-08-31 18:10:52,199 INFO: Finished detecting rRNA sequences from FastA files.
-2020-08-31 18:10:52,199 INFO: Finding best molecule for each read
-2020-08-31 18:10:52,277 INFO: Finished finding best molecule for each read
-2020-08-31 18:10:52,278 INFO: Start extracting reads/writing output
-2020-08-31 18:10:55,212 INFO: Processed reads:	1000000
-2020-08-31 18:10:58,132 INFO: Processed reads:	2000000
-2020-08-31 18:11:01,049 INFO: Processed reads:	3000000
-2020-08-31 18:11:03,975 INFO: Processed reads:	4000000
-2020-08-31 18:11:04,629 INFO: Processed reads:	4223475
-2020-08-31 18:11:04,636 INFO: Finished extracting reads/writing output
-2020-08-31 18:11:04,636 INFO: bac_lsu	36956
-2020-08-31 18:11:04,636 INFO: bac_ssu	18786
-2020-08-31 18:11:04,636 INFO: arc_ssu	83
-2020-08-31 18:11:04,636 INFO: arc_lsu	67
-2020-08-31 18:11:04,636 INFO: euk_lsu	5
-2020-08-31 18:11:04,752 INFO: Extracting FastA and revcomp FastA from sample.s.fq.gz
-2020-08-31 18:11:15,075 INFO: Processed reads:	1000000
-2020-08-31 18:11:15,153 INFO: Processed reads:	1007313
-2020-08-31 18:11:15,153 INFO: Finished extracting. Found 1007313 sequences.
-2020-08-31 18:11:15,153 INFO: Start detecting rRNA sequences in FastA files
-2020-08-31 18:11:15,153 INFO: Start detecting rRNA sequences for molecule=ssu
-2020-08-31 18:11:15,154 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.s.fq.gz_fw.fasta_ssu.hmmer --domtblout output/sample.s.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.s.fq.gz_fw.fasta
-2020-08-31 18:11:21,030 INFO: Finished hmmsearch
-2020-08-31 18:11:21,049 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.s.fq.gz_rev.fasta_ssu.hmmer --domtblout output/sample.s.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.s.fq.gz_rev.fasta
-2020-08-31 18:11:27,699 INFO: Finished hmmsearch
-2020-08-31 18:11:27,716 INFO: Finished detecting rRNA sequences for molecule=ssu
-2020-08-31 18:11:27,716 INFO: Start detecting rRNA sequences for molecule=lsu
-2020-08-31 18:11:27,716 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.s.fq.gz_fw.fasta_lsu.hmmer --domtblout output/sample.s.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.s.fq.gz_fw.fasta
-2020-08-31 18:11:45,314 INFO: Finished hmmsearch
-2020-08-31 18:11:45,336 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.s.fq.gz_rev.fasta_lsu.hmmer --domtblout output/sample.s.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.s.fq.gz_rev.fasta
-2020-08-31 18:12:08,698 INFO: Finished hmmsearch
-2020-08-31 18:12:08,720 INFO: Finished detecting rRNA sequences for molecule=lsu
-2020-08-31 18:12:08,720 INFO: Found 12344 potential rRNA sequences.
-2020-08-31 18:12:08,720 INFO: Finished detecting rRNA sequences from FastA files.
-2020-08-31 18:12:08,720 INFO: Finding best molecule for each read
-2020-08-31 18:12:08,738 INFO: Finished finding best molecule for each read
-2020-08-31 18:12:08,738 INFO: Start extracting reads/writing output
-2020-08-31 18:12:11,616 INFO: Processed reads:	1000000
-2020-08-31 18:12:11,638 INFO: Processed reads:	1007313
-2020-08-31 18:12:11,639 INFO: Finished extracting reads/writing output
-2020-08-31 18:12:11,639 INFO: bac_lsu	8127
-2020-08-31 18:12:11,639 INFO: bac_ssu	4153
-2020-08-31 18:12:11,639 INFO: arc_ssu	33
-2020-08-31 18:12:11,639 INFO: arc_lsu	29
-2020-08-31 18:12:11,639 INFO: euk_lsu	2
-2020-08-31 18:12:11,659 INFO: Extracting FastA and revcomp FastA from sample.m.fq.gz
-2020-08-31 18:12:22,009 INFO: Processed reads:	1000000
-2020-08-31 18:12:32,164 INFO: Processed reads:	2000000
-2020-08-31 18:12:42,332 INFO: Processed reads:	3000000
-2020-08-31 18:12:52,700 INFO: Processed reads:	4000000
-2020-08-31 18:13:02,863 INFO: Processed reads:	5000000
-2020-08-31 18:13:11,104 INFO: Processed reads:	5802126
-2020-08-31 18:13:11,104 INFO: Finished extracting. Found 5802126 sequences.
-2020-08-31 18:13:11,104 INFO: Start detecting rRNA sequences in FastA files
-2020-08-31 18:13:11,104 INFO: Start detecting rRNA sequences for molecule=ssu
-2020-08-31 18:13:11,104 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.m.fq.gz_fw.fasta_ssu.hmmer --domtblout output/sample.m.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.m.fq.gz_fw.fasta
-2020-08-31 18:13:58,458 INFO: Finished hmmsearch
-2020-08-31 18:13:58,522 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.m.fq.gz_rev.fasta_ssu.hmmer --domtblout output/sample.m.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm output/sample.m.fq.gz_rev.fasta
-2020-08-31 18:14:44,553 INFO: Finished hmmsearch
-2020-08-31 18:14:44,679 INFO: Finished detecting rRNA sequences for molecule=ssu
-2020-08-31 18:14:44,679 INFO: Start detecting rRNA sequences for molecule=lsu
-2020-08-31 18:14:44,680 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.m.fq.gz_fw.fasta_lsu.hmmer --domtblout output/sample.m.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.m.fq.gz_fw.fasta
-2020-08-31 18:17:19,336 INFO: Finished hmmsearch
-2020-08-31 18:17:19,456 INFO: Executing:	hmmsearch --cpu 4 -o output/sample.m.fq.gz_rev.fasta_lsu.hmmer --domtblout output/sample.m.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm output/sample.m.fq.gz_rev.fasta
-2020-08-31 18:19:50,845 INFO: Finished hmmsearch
-2020-08-31 18:19:50,989 INFO: Finished detecting rRNA sequences for molecule=lsu
-2020-08-31 18:19:50,989 INFO: Found 74109 potential rRNA sequences.
-2020-08-31 18:19:50,989 INFO: Finished detecting rRNA sequences from FastA files.
-2020-08-31 18:19:50,989 INFO: Finding best molecule for each read
-2020-08-31 18:19:51,094 INFO: Finished finding best molecule for each read
-2020-08-31 18:19:51,094 INFO: Start extracting reads/writing output
-2020-08-31 18:19:54,149 INFO: Processed reads:	1000000
-2020-08-31 18:19:57,103 INFO: Processed reads:	2000000
-2020-08-31 18:20:00,127 INFO: Processed reads:	3000000
-2020-08-31 18:20:03,163 INFO: Processed reads:	4000000
-2020-08-31 18:20:06,130 INFO: Processed reads:	5000000
-2020-08-31 18:20:08,495 INFO: Processed reads:	5802126
-2020-08-31 18:20:08,497 INFO: Finished extracting reads/writing output
-2020-08-31 18:20:08,497 INFO: bac_lsu	48331
-2020-08-31 18:20:08,497 INFO: bac_ssu	25619
-2020-08-31 18:20:08,497 INFO: arc_ssu	80
-2020-08-31 18:20:08,497 INFO: arc_lsu	64
-2020-08-31 18:20:08,498 INFO: euk_lsu	15
-2020-08-31 18:20:08,666 INFO: Input files:
-2020-08-31 18:20:08,666 INFO: 	Forward readfiles:
-2020-08-31 18:20:08,666 INFO: 		output/sample.1.fq.gz_bac_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 		output/sample.1.fq.gz_arc_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 	Reverse readfiles:
-2020-08-31 18:20:08,666 INFO: 		output/sample.2.fq.gz_bac_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 		output/sample.2.fq.gz_arc_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 	Single/Merged readfiles:
-2020-08-31 18:20:08,666 INFO: 		output/sample.s.fq.gz_bac_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 		output/sample.s.fq.gz_arc_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 		output/sample.m.fq.gz_bac_ssu.fasta
-2020-08-31 18:20:08,666 INFO: 		output/sample.m.fq.gz_arc_ssu.fasta
-2020-08-31 18:20:08,666 INFO: Output pattern:
-2020-08-31 18:20:08,667 INFO: 	output/sample
-2020-08-31 18:20:08,667 INFO: Reading and testing FastA files
-2020-08-31 18:20:08,818 INFO: Paired files stats:
-2020-08-31 18:20:08,818 INFO: 	Found 20873 inserts in paired files of which 16970 are actually paired and 3903 are singletons
-2020-08-31 18:20:08,818 INFO: Singleton/Merged files stats:
-2020-08-31 18:20:08,818 INFO: 	Found 29885 inserts in singleton files.
-2020-08-31 18:20:08,823 INFO: Total stats:
-2020-08-31 18:20:08,823 INFO: 	Paired inserts:	16970
-2020-08-31 18:20:08,823 INFO: 	Singleton inserts:	33788
-2020-08-31 18:20:08,823 INFO: Finished reading and testing FastA files
-2020-08-31 18:20:08,824 INFO: Writing paired sequences to FastA:	output/sample.pe.fasta
-2020-08-31 18:20:08,842 INFO: Writing finished
-2020-08-31 18:20:08,842 INFO: Writing singleton sequences to FastA:	output/sample.se.fasta
-2020-08-31 18:20:08,862 INFO: Writing finished
-2020-08-31 18:20:08,865 INFO: Aligning paired sequence file:	vsearch --usearch_global output/sample.pe.fasta --db mTAGs/db/SILVA-138_NR-97_complink_cons.vsearch.udb --id 0.97 --maxaccepts 100 --maxrejects 100 --strand both --userout output/sample.pe.m8 --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov 0.5 --threads 4 --output_no_hits
-vsearch v2.15.0_macos_x86_64, 16.0GB RAM, 4 cores
-https://github.com/torognes/vsearch
-
-Reading UDB file mTAGs/db/SILVA-138_NR-97_complink_cons.vsearch.udb 100%
-Reorganizing data in memory 100%
-Creating bitmaps 100%
-Parsing abundances 100%
-341380158 nt in 233519 seqs, min 900, max 3718, avg 1462
-Searching 100%
-Matching unique query sequences: 33814 of 33940 (99.63%)
-2020-08-31 18:21:58,616 INFO: Finished alignment
-2020-08-31 18:21:58,616 INFO: Aligning singleton sequence file:	vsearch --usearch_global output/sample.se.fasta --db mTAGs/db/SILVA-138_NR-97_complink_cons.vsearch.udb --id 0.97 --maxaccepts 100 --maxrejects 100 --strand both --userout output/sample.se.m8 --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov 0.5 --threads 4 --output_no_hits
-vsearch v2.15.0_macos_x86_64, 16.0GB RAM, 4 cores
-https://github.com/torognes/vsearch
-
-Reading UDB file mTAGs/db/SILVA-138_NR-97_complink_cons.vsearch.udb 100%
-Reorganizing data in memory 100%
-Creating bitmaps 100%
-Parsing abundances 100%
-341380158 nt in 233519 seqs, min 900, max 3718, avg 1462
-Searching 100%
-Matching unique query sequences: 33561 of 33788 (99.33%)
-2020-08-31 18:24:12,407 INFO: Finished alignment
-2020-08-31 18:24:12,407 INFO: Parsing alignment files
-2020-08-31 18:24:45,860 INFO: Finished parsing alignment files
-2020-08-31 18:24:45,860 INFO: Filtering alignments by score and length
-2020-08-31 18:24:50,990 INFO: Finished filtering
-2020-08-31 18:24:50,990 INFO: Performing LCA calculations
-2020-08-31 18:24:55,099 INFO: Finished LCA calculations
-2020-08-31 18:24:55,099 INFO: Start writing output files
-2020-08-31 18:24:55,099 INFO: Start writing:	output/sample.bins
-2020-08-31 18:24:55,726 INFO: Start writing:	output/sample.otu.tsv
-2020-08-31 18:24:55,822 INFO: Start writing:	output/sample.genus.tsv
-2020-08-31 18:24:55,826 INFO: Start writing:	output/sample.family.tsv
-2020-08-31 18:24:55,827 INFO: Start writing:	output/sample.order.tsv
-2020-08-31 18:24:55,828 INFO: Start writing:	output/sample.class.tsv
-2020-08-31 18:24:55,829 INFO: Start writing:	output/sample.phylum.tsv
-2020-08-31 18:24:55,829 INFO: Start writing:	output/sample.domain.tsv
-2020-08-31 18:24:55,829 INFO: Start writing:	output/sample.root.tsv
-2020-08-31 18:24:55,830 INFO: Finished writing output files
-2020-08-31 18:24:57,815 INFO: Finished annotate command
-2020-08-31 18:24:57,816 INFO: Finishing mTAGs with status:	0
-
+$ mtags profile -f sample.1.fq.gz -r sample.2.fq.gz -s sample.s.fq.gz sample.m.fq.gz -o output -t 4 -n sample -ma 1000 -mr 1000
 ```
+<details><summary>mTAGs log</summary>
+<p>
+
+
+```bash
+2021-06-21 09:04:48,644 INFO: Starting mTAGs
+2021-06-21 09:04:48,646 INFO: Extracting FastA and revcomp FastA from input/sample.1.fq.gz
+2021-06-21 09:04:59,536 INFO: Processed reads:	824523
+2021-06-21 09:04:59,536 INFO: Finished extracting. Found 824523 sequences.
+2021-06-21 09:04:59,536 INFO: Start detecting rRNA sequences in FastA files
+2021-06-21 09:04:59,536 INFO: Start detecting rRNA sequences for molecule=ssu
+2021-06-21 09:04:59,536 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.1.fq.gz_fw.fasta_ssu.hmmer --domtblout sample/sample.1.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.1.fq.gz_fw.fasta
+2021-06-21 09:05:06,982 INFO: Finished hmmsearch
+2021-06-21 09:05:06,988 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.1.fq.gz_rev.fasta_ssu.hmmer --domtblout sample/sample.1.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.1.fq.gz_rev.fasta
+2021-06-21 09:05:14,442 INFO: Finished hmmsearch
+2021-06-21 09:05:14,449 INFO: Finished detecting rRNA sequences for molecule=ssu
+2021-06-21 09:05:14,449 INFO: Start detecting rRNA sequences for molecule=lsu
+2021-06-21 09:05:14,450 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.1.fq.gz_fw.fasta_lsu.hmmer --domtblout sample/sample.1.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.1.fq.gz_fw.fasta
+2021-06-21 09:05:35,255 INFO: Finished hmmsearch
+2021-06-21 09:05:35,266 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.1.fq.gz_rev.fasta_lsu.hmmer --domtblout sample/sample.1.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.1.fq.gz_rev.fasta
+2021-06-21 09:05:55,845 INFO: Finished hmmsearch
+2021-06-21 09:05:55,859 INFO: Finished detecting rRNA sequences for molecule=lsu
+2021-06-21 09:05:55,859 INFO: Found 4143 potential rRNA sequences.
+2021-06-21 09:05:55,859 INFO: Finished detecting rRNA sequences from FastA files.
+2021-06-21 09:05:55,859 INFO: Finding best molecule for each read
+2021-06-21 09:05:55,867 INFO: Finished finding best molecule for each read
+2021-06-21 09:05:55,867 INFO: Start extracting reads/writing output
+2021-06-21 09:05:58,911 INFO: Processed reads:	824523
+2021-06-21 09:05:58,912 INFO: Finished extracting reads/writing output
+2021-06-21 09:05:58,912 INFO: euk_lsu	1571
+2021-06-21 09:05:58,912 INFO: bac_lsu	1114
+2021-06-21 09:05:58,912 INFO: euk_ssu	865
+2021-06-21 09:05:58,912 INFO: bac_ssu	583
+2021-06-21 09:05:58,912 INFO: arc_lsu	9
+2021-06-21 09:05:58,912 INFO: arc_ssu	1
+2021-06-21 09:05:58,927 INFO: Extracting FastA and revcomp FastA from input/sample.2.fq.gz
+2021-06-21 09:06:10,001 INFO: Processed reads:	824523
+2021-06-21 09:06:10,002 INFO: Finished extracting. Found 824523 sequences.
+2021-06-21 09:06:10,002 INFO: Start detecting rRNA sequences in FastA files
+2021-06-21 09:06:10,002 INFO: Start detecting rRNA sequences for molecule=ssu
+2021-06-21 09:06:10,002 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.2.fq.gz_fw.fasta_ssu.hmmer --domtblout sample/sample.2.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.2.fq.gz_fw.fasta
+2021-06-21 09:06:17,074 INFO: Finished hmmsearch
+2021-06-21 09:06:17,084 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.2.fq.gz_rev.fasta_ssu.hmmer --domtblout sample/sample.2.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.2.fq.gz_rev.fasta
+2021-06-21 09:06:24,016 INFO: Finished hmmsearch
+2021-06-21 09:06:24,022 INFO: Finished detecting rRNA sequences for molecule=ssu
+2021-06-21 09:06:24,022 INFO: Start detecting rRNA sequences for molecule=lsu
+2021-06-21 09:06:24,022 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.2.fq.gz_fw.fasta_lsu.hmmer --domtblout sample/sample.2.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.2.fq.gz_fw.fasta
+2021-06-21 09:06:44,641 INFO: Finished hmmsearch
+2021-06-21 09:06:44,653 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.2.fq.gz_rev.fasta_lsu.hmmer --domtblout sample/sample.2.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.2.fq.gz_rev.fasta
+2021-06-21 09:07:04,995 INFO: Finished hmmsearch
+2021-06-21 09:07:05,005 INFO: Finished detecting rRNA sequences for molecule=lsu
+2021-06-21 09:07:05,005 INFO: Found 4144 potential rRNA sequences.
+2021-06-21 09:07:05,005 INFO: Finished detecting rRNA sequences from FastA files.
+2021-06-21 09:07:05,005 INFO: Finding best molecule for each read
+2021-06-21 09:07:05,012 INFO: Finished finding best molecule for each read
+2021-06-21 09:07:05,012 INFO: Start extracting reads/writing output
+2021-06-21 09:07:08,038 INFO: Processed reads:	824523
+2021-06-21 09:07:08,039 INFO: Finished extracting reads/writing output
+2021-06-21 09:07:08,039 INFO: euk_lsu	1607
+2021-06-21 09:07:08,039 INFO: bac_lsu	1121
+2021-06-21 09:07:08,039 INFO: euk_ssu	833
+2021-06-21 09:07:08,039 INFO: bac_ssu	577
+2021-06-21 09:07:08,039 INFO: arc_lsu	5
+2021-06-21 09:07:08,039 INFO: arc_ssu	1
+2021-06-21 09:07:08,055 INFO: Extracting FastA and revcomp FastA from input/sample.s.fq.gz
+2021-06-21 09:07:14,410 INFO: Processed reads:	472552
+2021-06-21 09:07:14,410 INFO: Finished extracting. Found 472552 sequences.
+2021-06-21 09:07:14,410 INFO: Start detecting rRNA sequences in FastA files
+2021-06-21 09:07:14,410 INFO: Start detecting rRNA sequences for molecule=ssu
+2021-06-21 09:07:14,411 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.s.fq.gz_fw.fasta_ssu.hmmer --domtblout sample/sample.s.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.s.fq.gz_fw.fasta
+2021-06-21 09:07:18,525 INFO: Finished hmmsearch
+2021-06-21 09:07:18,529 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.s.fq.gz_rev.fasta_ssu.hmmer --domtblout sample/sample.s.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.s.fq.gz_rev.fasta
+2021-06-21 09:07:22,690 INFO: Finished hmmsearch
+2021-06-21 09:07:22,696 INFO: Finished detecting rRNA sequences for molecule=ssu
+2021-06-21 09:07:22,697 INFO: Start detecting rRNA sequences for molecule=lsu
+2021-06-21 09:07:22,697 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.s.fq.gz_fw.fasta_lsu.hmmer --domtblout sample/sample.s.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.s.fq.gz_fw.fasta
+2021-06-21 09:07:34,547 INFO: Finished hmmsearch
+2021-06-21 09:07:34,554 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.s.fq.gz_rev.fasta_lsu.hmmer --domtblout sample/sample.s.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.s.fq.gz_rev.fasta
+2021-06-21 09:07:46,666 INFO: Finished hmmsearch
+2021-06-21 09:07:46,675 INFO: Finished detecting rRNA sequences for molecule=lsu
+2021-06-21 09:07:46,675 INFO: Found 2236 potential rRNA sequences.
+2021-06-21 09:07:46,676 INFO: Finished detecting rRNA sequences from FastA files.
+2021-06-21 09:07:46,676 INFO: Finding best molecule for each read
+2021-06-21 09:07:46,679 INFO: Finished finding best molecule for each read
+2021-06-21 09:07:46,680 INFO: Start extracting reads/writing output
+2021-06-21 09:07:48,487 INFO: Processed reads:	472552
+2021-06-21 09:07:48,488 INFO: Finished extracting reads/writing output
+2021-06-21 09:07:48,488 INFO: euk_lsu	909
+2021-06-21 09:07:48,489 INFO: bac_lsu	602
+2021-06-21 09:07:48,489 INFO: euk_ssu	406
+2021-06-21 09:07:48,489 INFO: bac_ssu	313
+2021-06-21 09:07:48,489 INFO: arc_lsu	6
+2021-06-21 09:07:48,498 INFO: Extracting FastA and revcomp FastA from input/sample.m.fq.gz
+2021-06-21 09:08:04,216 INFO: Processed reads:	1000000
+2021-06-21 09:08:16,996 INFO: Processed reads:	1888111
+2021-06-21 09:08:16,997 INFO: Finished extracting. Found 1888111 sequences.
+2021-06-21 09:08:16,997 INFO: Start detecting rRNA sequences in FastA files
+2021-06-21 09:08:16,997 INFO: Start detecting rRNA sequences for molecule=ssu
+2021-06-21 09:08:16,997 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.m.fq.gz_fw.fasta_ssu.hmmer --domtblout sample/sample.m.fq.gz_fw.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.m.fq.gz_fw.fasta
+2021-06-21 09:08:39,040 INFO: Finished hmmsearch
+2021-06-21 09:08:39,051 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.m.fq.gz_rev.fasta_ssu.hmmer --domtblout sample/sample.m.fq.gz_rev.fasta_ssu.dom -E 0.01 mTAGs/data/ssu.hmm sample/sample.m.fq.gz_rev.fasta
+2021-06-21 09:09:00,018 INFO: Finished hmmsearch
+2021-06-21 09:09:00,036 INFO: Finished detecting rRNA sequences for molecule=ssu
+2021-06-21 09:09:00,036 INFO: Start detecting rRNA sequences for molecule=lsu
+2021-06-21 09:09:00,037 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.m.fq.gz_fw.fasta_lsu.hmmer --domtblout sample/sample.m.fq.gz_fw.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.m.fq.gz_fw.fasta
+2021-06-21 09:10:08,160 INFO: Finished hmmsearch
+2021-06-21 09:10:08,184 INFO: Executing:	hmmsearch --cpu 4 -o sample/sample.m.fq.gz_rev.fasta_lsu.hmmer --domtblout sample/sample.m.fq.gz_rev.fasta_lsu.dom -E 0.01 mTAGs/data/lsu.hmm sample/sample.m.fq.gz_rev.fasta
+2021-06-21 09:11:12,726 INFO: Finished hmmsearch
+2021-06-21 09:11:12,762 INFO: Finished detecting rRNA sequences for molecule=lsu
+2021-06-21 09:11:12,762 INFO: Found 10237 potential rRNA sequences.
+2021-06-21 09:11:12,762 INFO: Finished detecting rRNA sequences from FastA files.
+2021-06-21 09:11:12,762 INFO: Finding best molecule for each read
+2021-06-21 09:11:12,784 INFO: Finished finding best molecule for each read
+2021-06-21 09:11:12,784 INFO: Start extracting reads/writing output
+2021-06-21 09:11:16,805 INFO: Processed reads:	1000000
+2021-06-21 09:11:20,280 INFO: Processed reads:	1888111
+2021-06-21 09:11:20,282 INFO: Finished extracting reads/writing output
+2021-06-21 09:11:20,282 INFO: euk_lsu	3713
+2021-06-21 09:11:20,282 INFO: bac_lsu	3017
+2021-06-21 09:11:20,282 INFO: euk_ssu	1902
+2021-06-21 09:11:20,282 INFO: bac_ssu	1582
+2021-06-21 09:11:20,282 INFO: arc_lsu	16
+2021-06-21 09:11:20,282 INFO: arc_ssu	7
+False
+2021-06-21 09:11:20,334 INFO: Input files:
+2021-06-21 09:11:20,334 INFO: 	Forward readfiles:
+2021-06-21 09:11:20,334 INFO: 		sample/sample.1.fq.gz_bac_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.1.fq.gz_euk_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.1.fq.gz_arc_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 	Reverse readfiles:
+2021-06-21 09:11:20,334 INFO: 		sample/sample.2.fq.gz_euk_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.2.fq.gz_bac_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.2.fq.gz_arc_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 	Single/Merged readfiles:
+2021-06-21 09:11:20,334 INFO: 		sample/sample.s.fq.gz_bac_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.s.fq.gz_euk_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.m.fq.gz_euk_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.m.fq.gz_bac_ssu.fasta
+2021-06-21 09:11:20,334 INFO: 		sample/sample.m.fq.gz_arc_ssu.fasta
+2021-06-21 09:11:20,334 INFO: Output pattern:
+2021-06-21 09:11:20,334 INFO: 	sample/sample
+2021-06-21 09:11:20,334 INFO: Reading and testing FastA files
+2021-06-21 09:11:20,355 INFO: Paired files stats:
+2021-06-21 09:11:20,355 INFO: 	Found 1682 inserts in paired files of which 1178 are actually paired and 504 are singletons
+2021-06-21 09:11:20,355 INFO: Singleton/Merged files stats:
+2021-06-21 09:11:20,355 INFO: 	Found 4210 inserts in singleton files.
+2021-06-21 09:11:20,355 INFO: Total stats:
+2021-06-21 09:11:20,355 INFO: 	Paired inserts:	1178
+2021-06-21 09:11:20,355 INFO: 	Singleton inserts:	4714
+2021-06-21 09:11:20,355 INFO: Finished reading and testing FastA files
+2021-06-21 09:11:20,356 INFO: Writing paired sequences to FastA:	sample/sample.pe.fasta
+2021-06-21 09:11:20,358 INFO: Writing finished
+2021-06-21 09:11:20,358 INFO: Writing singleton sequences to FastA:	sample/sample.se.fasta
+2021-06-21 09:11:20,363 INFO: Writing finished
+2021-06-21 09:11:20,363 INFO: Aligning paired sequence file:	vsearch --usearch_global sample/sample.pe.fasta --db SILVA-138_NR-97_complink_cons.vsearch.udb --id 0.97 --maxaccepts 1000 --maxrejects 1000 --strand both --userout sample/sample.pe.m8 --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov 0.5 --threads 4 --output_no_hits
+vsearch v2.15.0_macos_x86_64, 16.0GB RAM, 4 cores
+https://github.com/torognes/vsearch
+
+Reading UDB file SILVA-138_NR-97_complink_cons.vsearch.udb 100%
+Reorganizing data in memory 100%
+Creating bitmaps 100%
+Parsing abundances 100%
+341368570 nt in 233519 seqs, min 900, max 3718, avg 1462
+Searching 100%
+Matching unique query sequences: 1890 of 2356 (80.22%)
+2021-06-21 09:13:26,382 INFO: Finished alignment
+2021-06-21 09:13:26,383 INFO: Aligning singleton sequence file:	vsearch --usearch_global sample/sample.se.fasta --db SILVA-138_NR-97_complink_cons.vsearch.udb --id 0.97 --maxaccepts 1000 --maxrejects 1000 --strand both --userout sample/sample.se.m8 --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov 0.5 --threads 4 --output_no_hits
+vsearch v2.15.0_macos_x86_64, 16.0GB RAM, 4 cores
+https://github.com/torognes/vsearch
+
+Reading UDB file SILVA-138_NR-97_complink_cons.vsearch.udb 100%
+Reorganizing data in memory 100%
+Creating bitmaps 100%
+Parsing abundances 100%
+341368570 nt in 233519 seqs, min 900, max 3718, avg 1462
+Searching 100%
+Matching unique query sequences: 3644 of 4714 (77.30%)
+2021-06-21 09:19:54,957 INFO: Finished alignment
+2021-06-21 09:19:54,958 INFO: Parsing alignment files
+2021-06-21 09:20:09,033 INFO: Finished parsing alignment files
+2021-06-21 09:20:09,033 INFO: Filtering alignments by score and length
+2021-06-21 09:20:10,883 INFO: Finished filtering
+2021-06-21 09:20:10,883 INFO: Performing LCA calculations
+2021-06-21 09:20:14,174 INFO: Finished LCA calculations
+2021-06-21 09:20:14,174 INFO: Start writing output files
+2021-06-21 09:20:14,174 INFO: Start writing:	sample/sample.bins
+2021-06-21 09:20:14,631 INFO: Start writing:	sample/sample.otu.tsv
+2021-06-21 09:20:14,759 INFO: Start writing:	sample/sample.genus.tsv
+2021-06-21 09:20:14,763 INFO: Start writing:	sample/sample.family.tsv
+2021-06-21 09:20:14,765 INFO: Start writing:	sample/sample.order.tsv
+2021-06-21 09:20:14,766 INFO: Start writing:	sample/sample.class.tsv
+2021-06-21 09:20:14,766 INFO: Start writing:	sample/sample.phylum.tsv
+2021-06-21 09:20:14,767 INFO: Start writing:	sample/sample.domain.tsv
+2021-06-21 09:20:14,767 INFO: Start writing:	sample/sample.root.tsv
+2021-06-21 09:20:14,768 INFO: Finished writing output files
+2021-06-21 09:20:15,178 INFO: Finished annotate command
+2021-06-21 09:20:15,178 INFO: mTAGs finished successfully
+```
+
+</p>
+</details>
+
+ 
+
 
 ### Merge profiles
 
@@ -366,27 +360,32 @@ The previous step produces profiles for different samples. It is useful for anal
 
 ```bash
 $  mtags merge --help
-2020-07-07 16:34:59,447 INFO: Starting mTAGs
-2020-07-07 16:34:59,447 INFO: Executing command merge
 
+2021-06-21 10:01:33,628 INFO: Starting mTAGs
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    1.0.0
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
+            degenerate consensus reference sequences of ribosomal RNA
+            gene. Bioinformatics (2021)
 
-Merge rRNA profiles generated by the mTAGs tool
+Usage: mtags merge [options]
 
-optional arguments:
-  -h, --help          show this help message and exit
-  -i BINS [BINS ...]  The *bins files that should be merged into one table
-  -o O                Output pattern. This pattern will be prepended to all
-                      output files
+Input options:
+    -i  FILE [FILE ...]   List of mTAGs bin files [Required]
+
+Output options:
+    -o  STR               Output prefix [Required]
                       
 $ mtags merge -i *bins -o merged_profile
 
  mtags merge -i mtags2/*bins -o out
-2020-07-07 16:36:06,642 INFO: Starting mTAGs
-2020-07-07 16:36:06,642 INFO: Executing command merge
-2020-07-07 16:36:06,676 INFO: Finished reading sample1.mTAG.bins. Found 35405 inserts.
-2020-07-07 16:36:06,691 INFO: Finished reading sample2.mTAG.bins. Found 16265 inserts.
-2020-07-07 16:36:06,718 INFO: Finished reading sample3.mTAG.bins. Found 25680 inserts.
-2020-07-07 16:36:06,749 INFO: Finished reading sample4.mTAG.bins. Found 34954 inserts.
+2021-06-21  16:36:06,642 INFO: Starting mTAGs
+2021-06-21  16:36:06,642 INFO: Executing command merge
+2021-06-21  16:36:06,676 INFO: Finished reading sample1.mTAG.bins. Found 35405 inserts.
+2021-06-21  16:36:06,691 INFO: Finished reading sample2.mTAG.bins. Found 16265 inserts.
+2021-06-21  16:36:06,718 INFO: Finished reading sample3.mTAG.bins. Found 25680 inserts.
+2021-06-21  16:36:06,749 INFO: Finished reading sample4.mTAG.bins. Found 34954 inserts.
 
 ```
 
