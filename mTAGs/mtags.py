@@ -27,7 +27,7 @@ import string
 Start Global config section
 '''
 
-MTAGS_VERSION = 0.9
+MTAGS_VERSION = "1.0.0"
 
 
 
@@ -69,7 +69,7 @@ def get_database():
     elif _database128.exists() and _taxmap128.exists():
         return _database128, _taxmap128
 
-    logging.error('No valid database found. Use mtag download before start profiling') 
+    logging.error('No valid database found. Use mtags download before start profiling')
     shutdown(status=1)
 
 
@@ -364,23 +364,23 @@ def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, rea
     # Create forward fasta file in workdir
     fasta_forward = output_folder.joinpath(f'{samplename}_fw.fasta')
     fasta_reverse = output_folder.joinpath(f'{samplename}_rev.fasta')
-    fasta_map = output_folder.joinpath(f'{samplename}_read.map')
+    #fasta_map = output_folder.joinpath(f'{samplename}_read.map')
     tmp_files.append(fasta_forward)
     tmp_files.append(fasta_reverse)
     number_of_input_sequences = 0
-    fasta_map_file = open(fasta_map, 'w')
+    #fasta_map_file = open(fasta_map, 'w')
     with open(fasta_forward, 'w') as fw_handle:
         with open(fasta_reverse, 'w') as rev_handle:
             for number_of_sequences, fasta in enumerate(stream_fa(input_seq_file), 1):
                 if number_of_sequences % 1000000 == 0:
                     logging.info(f'Processed reads:\t{number_of_sequences}')
                 header = fasta.header.split()[0]#re.sub('\s+', '_', fasta.header)
-                fasta_map_file.write(f'{header}\t{readnames}.{number_of_sequences}\n')
+                #fasta_map_file.write(f'{header}\t{readnames}.{number_of_sequences}\n')
                 fw_handle.write(f'>{readnames}.{number_of_sequences}\n{fasta.sequence}\n')
                 rev_handle.write(f'>{readnames}.{number_of_sequences}\n{revcomp(fasta.sequence)}\n')
     logging.info(f'Processed reads:\t{number_of_sequences}')
     logging.info(f'Finished extracting. Found {number_of_sequences} sequences.')
-    fasta_map_file.close()
+    #fasta_map_file.close()
     number_of_input_sequences = number_of_sequences
 
 
@@ -551,20 +551,41 @@ def execute_mtags_extract(args: list):
     HMMer has to be installed as a prerequisite
 
     """
-    logging.info('Executing command extract')
-    parser = argparse.ArgumentParser(
-        description=f'Extract rRNA reads in metagenomic samples. Version: {MTAGS_VERSION}')
 
-    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
-    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
-    parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.', default=[])
+    parser = argparse.ArgumentParser(
+        description='mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene', usage=f'''
+
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    {MTAGS_VERSION}
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using 
+            degenerate consensus reference sequences of ribosomal RNA 
+            gene. Bioinformatics (2021)
+
+Usage: mtags profile [options]
+    
+Input options:
+    -f  FILE [FILE ...]   Forward reads file. Can be fasta/fastq and gzipped.
+    -r  FILE [FILE ...]   Reverse reads file. Can be fasta/fastq and gzipped.
+    -s  FILE [FILE ...]   Single/merge reads file. Can be fasta/fastq and gzipped.
+
+Output options:
+    -o  DIR               Output folder [Required]
+
+Other options:
+    -t  INT               Number of threads. [4]
+            ''', formatter_class=CapitalisedHelpFormatter, add_help=False)
+
+    parser.add_argument('-f', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
+    parser.add_argument('-r', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
+    parser.add_argument('-s', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.', default=[])
     parser.add_argument('-o', action='store', dest='output',help='Output folder.', required=True)
     parser.add_argument('-t', action='store', dest='threads', help='Number of threads for hmmsearch.',
-                        default=1, type=int)
+                        default=4, type=int)
 
     if len(args) == 0:
-        parser.print_help()
-        shutdown(0)
+        parser.print_usage()
+        shutdown(1)
 
     results = parser.parse_args(args)
 
@@ -666,7 +687,7 @@ def mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
     logging.info(f'\t{out_file_pattern}')
 
 
-    
+
     paired_sequences, unpaired_sequences = test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s)
     pe_fasta_file = pathlib.Path(out_file_pattern + '.pe.fasta')
     se_fasta_file = pathlib.Path(out_file_pattern + '.se.fasta')
@@ -799,9 +820,29 @@ def execute_mtags_merge(args):
     """Top level function to merge
     mTAGs profiles
     """
-    logging.info('Executing command merge')
+
     parser = argparse.ArgumentParser(
-        description=f'Merge rRNA profiles generated by the mTAGs tool. Version: {MTAGS_VERSION}')
+        description='mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene',
+        usage=f'''
+
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    {MTAGS_VERSION}
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using 
+            degenerate consensus reference sequences of ribosomal RNA 
+            gene. Bioinformatics (2021)
+
+Usage: mtags merge [options]
+
+Input options:
+    -i  FILE [FILE ...]   List of mTAGs bin files [Required]
+
+Output options:
+    -o  STR               Output prefix [Required]
+
+        ''', formatter_class=CapitalisedHelpFormatter, add_help=False)
+
+
     parser.add_argument('-i', action='store', nargs='+', dest='bins',
                         help='The *bins files that should be merged into one table', required=True)
     parser.add_argument('-o', action='store', dest='o',
@@ -809,8 +850,8 @@ def execute_mtags_merge(args):
 
     result = parser.parse_args(args)
     if len(args) == 0:
-        parser.print_help()
-        shutdown(0)
+        parser.print_usage()
+        shutdown(1)
 
     input_bin_files = result.bins
     out_file_pattern = result.o
@@ -903,23 +944,51 @@ def execute_mtags_merge(args):
 def execute_mtags_annotate(args):
     """Top level annotation method from mTAGs
     """
-    logging.info('Executing command annotate')
-    parser = argparse.ArgumentParser(
-        description=f'Assigns LCA based taxonomy to rRNA ssu reads. Version: {MTAGS_VERSION}')
 
-    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input R1 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
-    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input R2 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
-    parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input singletons/merged fasta file(s).')
+    parser = argparse.ArgumentParser(
+        description='mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene', usage=f'''
+
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    {MTAGS_VERSION}
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using 
+            degenerate consensus reference sequences of ribosomal RNA 
+            gene. Bioinformatics (2021)
+
+Usage: mtags annotate [options]
+
+Input options:
+    -f  FILE [FILE ...]   Forward rRNA SSU reads file. Can be gzipped.
+    -r  FILE [FILE ...]   Reverse rRNA SSU reads file. Can be gzipped.
+    -s  FILE [FILE ...]   Single/merged rRNA SSU reads file. Can be gzipped.
+
+Output options:
+    -o  DIR               Output folder [Required]
+
+Other options:
+    -n  STR               Samplename [Required]
+    -t  INT               Number of threads. [4]
+    -ma INT               Maxaccepts, vsearch parameter. Larger 
+                          numbers increase sensitivity and runtime. [1000]
+    -mr INT               Maxrejects, vsearch parameter. Larger 
+                          numbers increase sensitivity and runtime. [1000]
+        ''', formatter_class=CapitalisedHelpFormatter, add_help=False)
+
+
+    parser.add_argument('-f', action='store', nargs='+', dest='i1', help='Input R1 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
+    parser.add_argument('-r', action='store', nargs='+', dest='i2', help='Input R2 fasta file(s). Sequences in paired files will be matched by name. Unmatched sequences will be counted as singletons.')
+    parser.add_argument('-s', action='store', nargs='+', dest='im', help='Input singletons/merged fasta file(s).')
 
     parser.add_argument('-o', action='store', dest='o',help='Output pattern. This pattern will be prepended to all output files',required=True)
-    parser.add_argument('-t', action='store', dest='t', help='Number of threads for vsearch alignment', default=4, type=int)
 
+    parser.add_argument('-n', action='store', dest='sample', help='Samplename', required=True)
+    parser.add_argument('-t', action='store', dest='t', help='Number of threads for vsearch alignment', default=4, type=int)
     parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
     parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
 
     results = parser.parse_args(args)
     if len(args) == 0:
-        parser.print_help()
+        parser.print_usage()
         shutdown(0)
     #######
     #Input#
@@ -933,7 +1002,7 @@ def execute_mtags_annotate(args):
     ########
     #Output#
     ########
-    out_file_pattern = results.o
+    output_folder = pathlib.Path(results.o)
 
 
     ########
@@ -943,8 +1012,9 @@ def execute_mtags_annotate(args):
     enable_binning = True
     maxaccepts = results.ma
     maxrejects = results.mr
+    samplename = results.sample
 
-
+    out_file_pattern = str(output_folder.joinpath(samplename))
 
     ########
     #Checks#
@@ -1048,26 +1118,51 @@ def execute_mtags_profile(args):
     the Silva database.
     """
 
-    logging.info('Executing command profile')
     parser = argparse.ArgumentParser(
-        description=f'Extract and taxonomically annotate rRNA reads in metagenomic samples. Version: {MTAGS_VERSION}')
+        description='mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene', usage=f'''
 
-    parser.add_argument('-i1', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
-    parser.add_argument('-i2', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
-    parser.add_argument('-is', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.')
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    {MTAGS_VERSION}
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using 
+            degenerate consensus reference sequences of ribosomal RNA 
+            gene. Bioinformatics (2021)
+
+Usage: mtags profile [options]
+
+Input options:
+    -f  FILE [FILE ...]   Forward reads file. Can be fasta/fastq and gzipped.
+    -r  FILE [FILE ...]   Reverse reads file. Can be fasta/fastq and gzipped.
+    -s  FILE [FILE ...]   Single/merge reads file. Can be fasta/fastq and gzipped.
+
+Output options:
+    -o  DIR               Output folder [Required]
+    
+Other options:
+    -n  STR               Samplename [Required]
+    -t  INT               Number of threads. [4]
+    -ma INT               Maxaccepts, vsearch parameter. Larger 
+                          numbers increase sensitivity and runtime. [1000]
+    -mr INT               Maxrejects, vsearch parameter. Larger 
+                          numbers increase sensitivity and runtime. [1000]
+        ''', formatter_class=CapitalisedHelpFormatter, add_help=False)
+
+
+    parser.add_argument('-f', action='store', nargs='+', dest='i1', help='Input forward reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i2. Read pairs in files are identified by the identical name in -i2.')
+    parser.add_argument('-r', action='store', nargs='+', dest='i2', help='Input reverse reads files. Can be fasta/fastq and gzipped. The order of the files has to match the order in -i1. Read pairs in files are identified by the identical name in -i1.')
+    parser.add_argument('-s', action='store', nargs='+', dest='im', help='Input merged/single-end reads files. Can be fasta/fastq and gzipped.')
 
     parser.add_argument('-o', action='store', dest='output',help='Output folder.', required=True)
-    parser.add_argument('-s', action='store', dest='sample', help='Samplename', required=True)
 
+    parser.add_argument('-n', action='store', dest='sample', help='Samplename', required=True)
     parser.add_argument('-t', action='store', dest='threads', help='Number of threads.', default=4, type=int)
-
     parser.add_argument('-ma', action='store', dest='ma', help='Maxaccepts, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
     parser.add_argument('-mr', action='store', dest='mr', help='Maxrejects, vsearch parameter. Larger numbers increase sensitivity and runtime. default=1000', default=1000, type=int)
 
 
     if len(args) == 0:
-        parser.print_help()
-        shutdown(0)
+        parser.print_usage()
+        shutdown(1)
 
     results = parser.parse_args(args)
 
@@ -1094,47 +1189,60 @@ def execute_mtags_profile(args):
     maxrejects = results.mr
 
 
-    ssu_files = _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, output_folder, threads)
-
 
     if not db_marker_file.exists():
         logging.error(f'The database is not downloaded. Please run `mtags download` first')
         shutdown(1)
-
-    database, taxmap = get_database()
-
     if output_folder.joinpath(samplename).is_dir():
         logging.error(f'The output pattern cannot be a directory.')
         shutdown(1)
+
+    ssu_files = _mtags_extract_grouped(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s, output_folder, threads)
+
+
+    database, taxmap = get_database()
+
+
 
     output_folder.mkdir(parents=True, exist_ok=True)
     mtags_annotate_vsearch(ssu_files[0], ssu_files[1], ssu_files[2], database, taxmap, str(output_folder.joinpath(samplename)), threads=threads, enable_binning=enable_binning, maxaccepts=maxaccepts, maxrejects=maxrejects)
     logging.info('Finished annotate command')
 
+class CapitalisedHelpFormatter(argparse.HelpFormatter):
+    def add_usage(self, usage, actions, groups, prefix=None):
+        if prefix is None:
+            prefix = ''
+        return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
 
 
 def main():
-    parser = argparse.ArgumentParser(description=f'A toolkit to extract and quantify rRNA reads from metagenomic data. Version: {MTAGS_VERSION}',
-                                     usage='''mtags <command> [<args>]
-    
-    [General]
-    
-        profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
-        merge       Merge profiles
-    
-    [Expert]
-    
-        extract     Extract rRNA reads in metagenomic samples
-        annotate    Annotate and quantify rRNA reads
-    
-    [Installation] 
-    
-        download    Download the mTAGs database - Once after download of the tool
+
+    parser = argparse.ArgumentParser(
+        description='mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene', usage=f'''
+
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    {MTAGS_VERSION}
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using 
+            degenerate consensus reference sequences of ribosomal RNA 
+            gene. Bioinformatics (2021)
+
+Usage: mtags <command> [options]
+Command:
+
+-- General
+    profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
+    merge       Merge profiles
         
-    ''')
+-- Expert
+    extract     Extract rRNA reads in metagenomic samples
+    annotate    Annotate and quantify rRNA reads
+        
+-- Installation 
+    download    Download the mTAGs database - Once after download of the tool
+    ''', formatter_class=CapitalisedHelpFormatter, add_help=False)
 
     parser.add_argument('command', help='Subcommand to run: profile|merge|extract|annotate|download', choices=['profile', 'merge', 'extract', 'annotate', 'download'])
-
 
     args = parser.parse_args(sys.argv[1:2])
     startup()
@@ -1157,8 +1265,8 @@ def main():
         execute_mtags_profile(sys.argv[2:])
         shutdown(0)
     else:
-        parser.print_help()
-        shutdown(0)
+        parser.print_usage()
+        shutdown(1)
     shutdown(0)
 
 

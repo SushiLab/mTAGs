@@ -3,10 +3,10 @@ from setuptools import setup
 
 setup(
     name = "mTAGs",
-    version = "0.9",
+    version = "1.0.0",
     author = "Hans-Joachim Ruscheweyh",
     author_email = "hansr@ethz.ch",
-    description = ("Bioinformatic toolkit for extraction and taxonomic annotation of rRNA reads from metagenomic sequencing data."),
+    description = ("mTAGs - taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA gene."),
     license = "GPLv3",
     keywords = "bioinformatics metagenomics ngs 16S",
     url = "https://github.com/SushiLab/mTAGs",
