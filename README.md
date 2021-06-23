@@ -9,16 +9,17 @@
 
 
 
-- [Overview](#overview)
-- [Installation](#installation)
-- [Usage](#usage)
-	* [Profile](#profile)
-	* [Merge profiles](#merge-profiles)
-- [Output](#output)
-	* [Profile file](#profile-file)
-	* [Single insert annotation](#single-insert-annotation)
-- [Database](#database)
-- [References](#references)
+  * [Installation](#installation)
+  * [Installation using conda](#installation-using-conda)
+  * [Manual installation](#manual-installation)
+  * [Usage](#usage)
+    + [PROFILE](#profile)
+    + [MERGE](#merge)
+  * [Output Files](#output-files)
+    + [Profile file](#profile-file)
+    + [Single insert annotation](#single-insert-annotation)
+  * [Database](#database)
+  * [References](#references)
 
 mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencing reads belonging to the small subunit of the ribosomal RNA (SSU-rRNA) gene and annotates them through the alignment to full-length degenerate consensus SSU-rRNA reference sequences. The tool is capable of processing single-end and pair-end metagenomic reads, takes advantage of the information contained in any region of the SSU-rRNA gene and provides relative abundance profiles at multiple taxonomic ranks (Domain, Phylum, Class, Order, Family, Genus and OTUs defined at a 97% sequence identity cutoff).
 
