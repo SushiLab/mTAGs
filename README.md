@@ -4,7 +4,7 @@
 <img src="img/mtags_logo.png" width="500"  />
 </p>
 
-mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencing reads belonging to the small subunit of the ribosomal RNA (SSU-rRNA) gene and annotates them through the alignment to full-length degenerate consensus reference sequences. The tool is capable of processing single-end and pair-end metagenomic reads, takes advantage of the information contained in any region of the SSU-rRNA gene and provides relative abundance profiles at multiple taxonomic ranks (Domain, Phylum, Class, Order, Family, Genus and OTUs defined at a 97% sequence identity cutoff).
+mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencing reads belonging to the small subunit of the ribosomal RNA (SSU-rRNA) gene and annotates them through the alignment to full-length degenerate consensus SSU-rRNA reference sequences. The tool is capable of processing single-end and pair-end metagenomic reads, takes advantage of the information contained in any region of the SSU-rRNA gene and provides relative abundance profiles at multiple taxonomic ranks (Domain, Phylum, Class, Order, Family, Genus and OTUs defined at a 97% sequence identity cutoff).
 
 
 
