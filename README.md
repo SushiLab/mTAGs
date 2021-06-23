@@ -114,7 +114,7 @@ The tool is split in to two steps: profiling and merging. The first step (`mtags
 
 ### Profile
 
-This step uses precomputed HMM models to extract rRNA sequences from a metagenomic sample. The rRNA sequences are then aligned against a clustered Silva database to annotate sequences and profile samples. mTAGs takes as input a fasta/fastq files with raw sequence data which should have been previously quality filtered.
+This step uses precomputed HMM models to extract rRNA sequences from a metagenomic sample. The rRNA sequences are then aligned against a clustered Silva database to annotate sequences and profile samples. mTAGs takes as input fasta/fastq files with raw sequence data which should have been previously quality filtered.
 
 
 
