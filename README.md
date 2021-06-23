@@ -1,10 +1,10 @@
-# mTAGs: taxonomic profiling using degenerate <br> consensus reference sequences of ribosomal RNA genes
-
 <p align="center">
 <img src="img/mtags_logo.png" width="500"  />
 </p>
 
-mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencing reads belonging to the small subunit of the ribosomal RNA (SSU-rRNA) gene and annotates them through the alignment to full-length degenerate consensus SSU-rRNA reference sequences. The tool is capable of processing single-end and pair-end metagenomic reads, takes advantage of the information contained in any region of the SSU-rRNA gene and provides relative abundance profiles at multiple taxonomic ranks (Domain, Phylum, Class, Order, Family, Genus and OTUs defined at a 97% sequence identity cutoff).
+# mTAGs: taxonomic profiling using degenerate consensus reference sequences of ribosomal RNA genes
+
+
 
 
 
@@ -20,7 +20,7 @@ mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencin
 - [Database](#database)
 - [References](#references)
 
-## Overview
+mTAGs is a tool for the taxonomic profiling of metagenomes. It detects sequencing reads belonging to the small subunit of the ribosomal RNA (SSU-rRNA) gene and annotates them through the alignment to full-length degenerate consensus SSU-rRNA reference sequences. The tool is capable of processing single-end and pair-end metagenomic reads, takes advantage of the information contained in any region of the SSU-rRNA gene and provides relative abundance profiles at multiple taxonomic ranks (Domain, Phylum, Class, Order, Family, Genus and OTUs defined at a 97% sequence identity cutoff).
 
 
 The tool is developed by Hans-Joachim Ruscheweyh and Guillem Salazar and distributed under the [![License GPL v3](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html).
@@ -39,37 +39,44 @@ Questions/Comments? Write a github issue.
 ## Installation
 
 
-mTAGs is written in Python and can be installed via `pip`. The tool has 3 dependencies that need to be installed in advance:
+`mTAGs` is written in `python` and has the following dependencies:
 
 
-- [Python 3](https://www.python.org/) (tested: v3.7)
+- Python>=v3.7
 - [vsearch](https://github.com/torognes/vsearch/) (tested: v2.15.0)
 - [hmmer](http://hmmer.org/) (tested: v3.3)
 
 
 
-This can be done manually or using conda:
+## Installation using conda
+
+The easiest way to install mVIRs is to use the conda package manager, which will automatically create an environment with dependencies installed in the correct version.
 
 ```bash
 $ conda create -n mtags python=3.7 hmmer vsearch
 $ source activate mtags
 # or
 $ conda activate mtags
-```
 
-
-
-mTAGs can then be installed via `pip`:
-
-```
 $ git clone https://github.com/SushiLab/mTAGs.git
 $ cd mTAGs
 $ pip install -r requirements.txt -e . 
 
-# Test whether installation was successful
+# Download mTAGs database
+$ mtags download
+
+2021-06-21 12:02:40,294 INFO: Starting mTAGs
+2021-06-21 12:02:40,294 INFO: Start downloading the mTAGs database. ~600MB
+2021-06-21 12:05:17,883 INFO: Finished downloading the mTAGs database.
+2021-06-21 12:05:17,883 INFO: Finishing mTAGs
 
 $ mtags
+```
+<details><summary>mTAGs output</summary>
+<p>
 
+
+```bash
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
             sequences of ribosomal RNA gene
 Version:    1.0.0
@@ -91,19 +98,63 @@ Command:
 -- Installation
     download    Download the mTAGs database - Once after download of the tool
 
-```
-
 The database needs to be downloaded in the last step of the installation. This needs to be done once and before the first metagenomic samples can be processed:
-
 ```
+
+</p>
+</details>
+
+
+## Manual installation
+
+Manual installation is possible but not recommended. Install via pip after installation of dependencies:
+
+```bash
+$ git clone https://github.com/SushiLab/mTAGs.git
+$ cd mTAGs
+$ pip install -r requirements.txt -e . 
+
+# Download mTAGs database
 $ mtags download
 
 2021-06-21 12:02:40,294 INFO: Starting mTAGs
 2021-06-21 12:02:40,294 INFO: Start downloading the mTAGs database. ~600MB
 2021-06-21 12:05:17,883 INFO: Finished downloading the mTAGs database.
 2021-06-21 12:05:17,883 INFO: Finishing mTAGs
+
+$ mtags
+```
+<details><summary>mTAGs output</summary>
+<p>
+
+
+```bash
+Program:    mTAGs - taxonomic profiling using degenerate consensus reference
+            sequences of ribosomal RNA gene
+Version:    1.0.0
+Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
+            degenerate consensus reference sequences of ribosomal RNA
+            gene. Bioinformatics (2021)
+
+Usage: mtags <command> [options]
+Command:
+
+-- General
+    profile     Extract and taxonomically annotate rRNA reads in metagenomic samples
+    merge       Merge profiles
+
+-- Expert
+    extract     Extract rRNA reads in metagenomic samples
+    annotate    Annotate and quantify rRNA reads
+
+-- Installation
+    download    Download the mTAGs database - Once after download of the tool
+
+The database needs to be downloaded in the last step of the installation. This needs to be done once and before the first metagenomic samples can be processed:
 ```
 
+</p>
+</details>
 
 
 ## Usage
@@ -112,9 +163,9 @@ The tool is split in to two steps: profiling and merging. The first step (`mtags
 
 
 
-### Profile
+### PROFILE
 
-This step uses precomputed HMM models to extract rRNA sequences from a metagenomic sample. The rRNA sequences are then aligned against a clustered Silva database to annotate sequences and profile samples. mTAGs takes as input fasta/fastq files with raw sequence data which should have been previously quality filtered.
+This step uses precomputed HMM models to extract rRNA sequences from a metagenomic sample. The rRNA sequences are then aligned against a clustered rRNA database to annotate sequences and profile samples. `mTAGs` takes as input fasta/fastq files with quality controlled sequencing data.
 
 
 
@@ -146,7 +197,7 @@ Other options:
     -mr INT               Maxrejects, vsearch parameter. Larger
                           numbers increase sensitivity and runtime. [1000]
 
-
+# Example usage of the mTAGs profile routine
 $ mtags profile -f sample.1.fq.gz -r sample.2.fq.gz -s sample.s.fq.gz sample.m.fq.gz -o output -t 4 -n sample -ma 1000 -mr 1000
 ```
 <details><summary>mTAGs log</summary>
@@ -354,12 +405,12 @@ Matching unique query sequences: 3644 of 4714 (77.30%)
  
 
 
-### Merge profiles
+### MERGE
 
 The previous step produces taxonomic profiles for different samples. It is useful for downstream analysis to have multiple profiles in one file. The merge function combines multiple profiles into a tab-separated file with each column representating a sample:
 
 ```bash
-$  mtags merge --help
+$  mtags merge
 
 2021-06-21 10:01:33,628 INFO: Starting mTAGs
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
@@ -379,7 +430,9 @@ Output options:
                       
 $ mtags merge -i *bins -o merged_profile
 
- mtags merge -i mtags2/*bins -o out
+# Example usage of mTAGs merge:
+
+$ mtags merge -i mtags2/*bins -o out
 2021-06-21  16:36:06,642 INFO: Starting mTAGs
 2021-06-21  16:36:06,642 INFO: Executing command merge
 2021-06-21  16:36:06,676 INFO: Finished reading sample1.mTAG.bins. Found 35405 inserts.
@@ -391,9 +444,9 @@ $ mtags merge -i *bins -o merged_profile
 
 
 
-## Output
+## Output Files
 
-The tool produces two types of output, the taxonomic profiles and the annotation of every insert.
+The tool produces two types of output, the taxonomic profiles (`*.tsv`) and the annotation of every insert (`*.bins`).
 
 ### Profile file
 
@@ -447,7 +500,7 @@ The file with merged profiles has one column per sample.
 
 ### Single insert annotation
 
-The `.bins` file with the taxonomic annotation of each insert looks the following:
+The `*.bins` file with the taxonomic annotation of each insert looks the following:
 
 `INSERTNAME	RANK	PATH`
 
