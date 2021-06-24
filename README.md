@@ -10,8 +10,8 @@
 
 
   * [Installation](#installation)
-  * [Installation using conda](#installation-using-conda)
-  * [Manual installation](#manual-installation)
+    + [Installation using conda](#installation-using-conda)
+    + [Manual installation](#manual-installation)
   * [Usage](#usage)
     + [PROFILE](#profile)
     + [MERGE](#merge)
@@ -49,7 +49,7 @@ Questions/Comments? Write a github issue.
 
 
 
-## Installation using conda
+### Installation using conda
 
 The easiest way to install mVIRs is to use the conda package manager, which will automatically create an environment with dependencies installed in the correct version.
 
@@ -106,7 +106,7 @@ The database needs to be downloaded in the last step of the installation. This n
 </details>
 
 
-## Manual installation
+### Manual installation
 
 Manual installation is possible but not recommended. Install via pip after installation of dependencies:
 
