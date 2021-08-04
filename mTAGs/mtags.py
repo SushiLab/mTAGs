@@ -7,6 +7,7 @@ import Bio.SeqIO.QualityIO
 import Bio.SeqIO.FastaIO as FastaIO
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
+import multiprocessing
 import argparse
 import collections
 import logging
@@ -248,31 +249,32 @@ def load_and_parse_vsearch_tab_file(file):
 
 
 
-def read_and_pair_vsearch_tab_files(pe_m8_file, se_m8_file):
+def read_and_pair_vsearch_tab_files(m8_file, paired=False):
     """Read and parse the alignments in PE and SE files into memory.
     Next, it aims to find paired inserts based in names and if they
     align to the same reference.
 
     """
     aligned_inserts = {}
-    pe_readname_2_alignments = load_and_parse_vsearch_tab_file(pe_m8_file)
-    se_readname_2_alignments = load_and_parse_vsearch_tab_file(se_m8_file)
-    for readname, se_aln in se_readname_2_alignments:
-        aligned_insert = aligned_inserts.get(readname, None)
-        if not aligned_insert:
-            aligned_insert = AlignedInsert(readname, False)
-            aligned_inserts[readname] = aligned_insert
+    readname_2_alignments = load_and_parse_vsearch_tab_file(m8_file)
+    if not paired:
+        for readname, se_aln in readname_2_alignments:
+            aligned_insert = aligned_inserts.get(readname, None)
+            if not aligned_insert:
+                aligned_insert = AlignedInsert(readname, False)
+                aligned_inserts[readname] = aligned_insert
 
-        aligned_inserts[readname].add_alignment(se_aln, '1')
-    for readname, pe_aln in pe_readname_2_alignments:
-        [insert_name, orientation] = readname.rsplit('.',1)
-        #orientation = readname[-1]
+            aligned_inserts[readname].add_alignment(se_aln, '1')
 
-        aligned_insert = aligned_inserts.get(insert_name, None)
-        if not aligned_insert:
-            aligned_insert = AlignedInsert(insert_name, True)
-            aligned_inserts[insert_name] = aligned_insert
-        aligned_inserts[insert_name].add_alignment(pe_aln, orientation)
+    else:
+        for readname, pe_aln in readname_2_alignments:
+            [insert_name, orientation] = readname.rsplit('.',1)
+
+            aligned_insert = aligned_inserts.get(insert_name, None)
+            if not aligned_insert:
+                aligned_insert = AlignedInsert(insert_name, True)
+                aligned_inserts[insert_name] = aligned_insert
+            aligned_inserts[insert_name].add_alignment(pe_aln, orientation)
 
     return aligned_inserts
 
@@ -656,7 +658,20 @@ def test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfi
 
 
 
+def parse_and_interpret_alignments(data):
+    (m8_file, paired, otu_2_taxpath) = data
+    aligned_inserts = read_and_pair_vsearch_tab_files(m8_file, paired)
 
+    insert_2_best_alignments = {}
+    for insert_name, aligned_insert in aligned_inserts.items():
+        best_alignments = aligned_insert.extract_best_alignments()
+        insert_2_best_alignments[insert_name] = best_alignments
+    partial_insert_2_lca = {}
+
+    for insert_name, best_alignments in insert_2_best_alignments.items():
+        lca = lca_vsearch(best_alignments, otu_2_taxpath)
+        partial_insert_2_lca[insert_name] = lca
+    return partial_insert_2_lca
 
 
 
@@ -686,66 +701,140 @@ def mtags_annotate_vsearch(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_
     logging.info(f'Output pattern:')
     logging.info(f'\t{out_file_pattern}')
 
-
-
-    paired_sequences, unpaired_sequences = test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s)
-    pe_fasta_file = pathlib.Path(out_file_pattern + '.pe.fasta')
-    se_fasta_file = pathlib.Path(out_file_pattern + '.se.fasta')
-    tmp_files.append(pe_fasta_file)
-    tmp_files.append(se_fasta_file)
-    logging.info(f'Writing paired sequences to FastA:\t{pe_fasta_file}')
-    with open(pe_fasta_file, 'w') as handle:
-        for insert_name, reads in paired_sequences.items():
-            handle.write(f'>{insert_name}.1\n{reads[0].sequence}\n')
-            handle.write(f'>{insert_name}.2\n{reads[1].sequence}\n')
-    logging.info(f'Writing finished')
-    logging.info(f'Writing singleton sequences to FastA:\t{se_fasta_file}')
-    with open(se_fasta_file, 'w') as handle:
-        for insert_name, read in unpaired_sequences.items():
-            handle.write(f'>{read.header}\n{read.sequence}\n')
-    logging.info(f'Writing finished')
-    # 2. Map reads against database
-
-    pe_m8_file = pathlib.Path(out_file_pattern + '.pe.m8')
-    se_m8_file = pathlib.Path(out_file_pattern + '.se.m8')
-
-
-
-    aln_command_template = 'vsearch --usearch_global {} --db {} --id 0.97 --maxaccepts {} --maxrejects {} --strand both --userout {} --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov {} --threads {} --output_no_hits'
-    pe_aln_command = aln_command_template.format(pe_fasta_file, database, maxaccepts, maxrejects, pe_m8_file, MTAGS_CLASSIFY_QCOV, threads)
-    se_aln_command = aln_command_template.format(se_fasta_file, database, maxaccepts, maxrejects, se_m8_file, MTAGS_CLASSIFY_QCOV, threads)
     if True:
-        logging.info(f'Aligning paired sequence file:\t{pe_aln_command}')
-        if len(paired_sequences) == 0:
-            pe_m8_file.touch()
-        else:
-            check_call(pe_aln_command)
-        logging.info(f'Finished alignment')
-        logging.info(f'Aligning singleton sequence file:\t{se_aln_command}')
-        if len(unpaired_sequences) == 0:
-            se_m8_file.touch()
-        else:
-            check_call(se_aln_command)
-        logging.info(f'Finished alignment')
-    # 3. Read mapping files
-    logging.info(f'Parsing alignment files')
-    aligned_inserts = read_and_pair_vsearch_tab_files(pe_m8_file, se_m8_file)
-    logging.info(f'Finished parsing alignment files')
-    # 4. Filter
-    logging.info(f'Filtering alignments by score and length')
-    insert_2_best_alignments = {}
-    for insert_name, aligned_insert in aligned_inserts.items():
-        best_alignments = aligned_insert.extract_best_alignments()
-        insert_2_best_alignments[insert_name] = best_alignments
-    logging.info(f'Finished filtering')
-    logging.info(f'Performing LCA calculations')
-    otu_2_taxpath, rank_2_taxpath = read_id_to_taxpath(taxmap)
+        paired_sequences, unpaired_sequences = test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2,
+                                                                          input_seqfiles_s)
+        batchsize = 1000
+        logging.info(f'Writing sequences to files with each {batchsize} reads.')
+        fasta_files = []
 
-    insert_2_lca = {}
-    for insert_name, best_alignments in insert_2_best_alignments.items():
-        lca = lca_vsearch(best_alignments, otu_2_taxpath)
-        insert_2_lca[insert_name] = lca
-    logging.info(f'Finished LCA calculations')
+        # pe:
+        paired_sequences = [(x[0], x[1]) for x in paired_sequences.items()]
+
+        pe_buckets = [paired_sequences[i:i + int(batchsize/2)] for i in range(0, len(paired_sequences), int(batchsize/2))]
+
+        for cnt, pe_bucket in enumerate(pe_buckets):
+            fasta_file = pathlib.Path(out_file_pattern + f'.{cnt}.pe.fasta')
+            fasta_files.append((fasta_file, True))
+            with open(fasta_file, 'w')  as handle:
+                for (insert_name, reads) in pe_bucket:
+                    handle.write(f'>{insert_name}.1\n{reads[0].sequence}\n')
+                    handle.write(f'>{insert_name}.2\n{reads[1].sequence}\n')
+        # se
+        unpaired_sequences = [(x[0], x[1]) for x in unpaired_sequences.items()]
+
+        se_buckets = [unpaired_sequences[i:i + batchsize] for i in range(0, len(unpaired_sequences), batchsize)]
+
+        for cnt, se_bucket in enumerate(se_buckets):
+            fasta_file = pathlib.Path(out_file_pattern + f'.{cnt}.se.fasta')
+            fasta_files.append((fasta_file, False))
+            with open(fasta_file, 'w')  as handle:
+                for (insert_name, read) in se_bucket:
+                    handle.write(f'>{insert_name}\n{read.sequence}\n')
+        logging.info(f'Finished writing sequences to {len(fasta_files)} files.')
+        logging.info(f'Starting alignment')
+        aln_command_template = 'vsearch --usearch_global {} --db {} --id 0.97 --maxaccepts {} --maxrejects {} --strand both --userout {} --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov {} --threads {} --output_no_hits'
+        m8_files = []
+        for cnt, (fasta_file, paired) in enumerate(fasta_files, 1):
+
+            m8_file = pathlib.Path(str(fasta_file) + '.m8')
+            m8_files.append((m8_file, paired))
+            aln_command = aln_command_template.format(fasta_file, database, maxaccepts, maxrejects, m8_file, MTAGS_CLASSIFY_QCOV, threads)
+            #check_call(aln_command)
+            logging.info(f'{cnt}/{len(fasta_files)} aligned\n\n')
+        logging.info(f'Finished alignment')
+
+        logging.info(f'Starting alignment file parsing')
+        otu_2_taxpath, rank_2_taxpath = read_id_to_taxpath(taxmap)
+        insert_2_lca = {}
+        work_data = []
+        for cnt, (m8_file, paired) in enumerate(m8_files, 1):
+            work_data.append((m8_file, paired, otu_2_taxpath))
+
+
+
+        poolsize = threads
+        if poolsize > 4:
+            poolsize = 4
+
+        pool = multiprocessing.Pool(poolsize)
+        results = pool.map(parse_and_interpret_alignments, work_data)
+
+        pool.close()
+        pool.join()
+        for partial_insert_2_lca in results:
+            for insert_name, lca in partial_insert_2_lca.items():
+                insert_2_lca[insert_name] = lca
+        logging.info(f'Finished alignment file parsing')
+
+
+
+
+
+
+
+
+
+
+    if False:
+        paired_sequences, unpaired_sequences = test_and_merge_fasta_files(input_seqfiles_r1, input_seqfiles_r2, input_seqfiles_s)
+        pe_fasta_file = pathlib.Path(out_file_pattern + '.pe.fasta')
+        se_fasta_file = pathlib.Path(out_file_pattern + '.se.fasta')
+        tmp_files.append(pe_fasta_file)
+        tmp_files.append(se_fasta_file)
+        logging.info(f'Writing paired sequences to FastA:\t{pe_fasta_file}')
+        with open(pe_fasta_file, 'w') as handle:
+            for insert_name, reads in paired_sequences.items():
+                handle.write(f'>{insert_name}.1\n{reads[0].sequence}\n')
+                handle.write(f'>{insert_name}.2\n{reads[1].sequence}\n')
+        logging.info(f'Writing finished')
+        logging.info(f'Writing singleton sequences to FastA:\t{se_fasta_file}')
+        with open(se_fasta_file, 'w') as handle:
+            for insert_name, read in unpaired_sequences.items():
+                handle.write(f'>{read.header}\n{read.sequence}\n')
+        logging.info(f'Writing finished')
+        # 2. Map reads against database
+
+        pe_m8_file = pathlib.Path(out_file_pattern + '.pe.m8')
+        se_m8_file = pathlib.Path(out_file_pattern + '.se.m8')
+
+
+
+        aln_command_template = 'vsearch --usearch_global {} --db {} --id 0.97 --maxaccepts {} --maxrejects {} --strand both --userout {} --userfields query+target+qcov+id+qilo+qihi+tilo+tihi+alnlen+ids+mism+gaps+qstrand --query_cov {} --threads {} --output_no_hits'
+        pe_aln_command = aln_command_template.format(pe_fasta_file, database, maxaccepts, maxrejects, pe_m8_file, MTAGS_CLASSIFY_QCOV, threads)
+        se_aln_command = aln_command_template.format(se_fasta_file, database, maxaccepts, maxrejects, se_m8_file, MTAGS_CLASSIFY_QCOV, threads)
+        if True:
+            logging.info(f'Aligning paired sequence file:\t{pe_aln_command}')
+            if len(paired_sequences) == 0:
+                pe_m8_file.touch()
+            else:
+                check_call(pe_aln_command)
+            logging.info(f'Finished alignment')
+            logging.info(f'Aligning singleton sequence file:\t{se_aln_command}')
+            if len(unpaired_sequences) == 0:
+                se_m8_file.touch()
+            else:
+                check_call(se_aln_command)
+            logging.info(f'Finished alignment')
+        # 3. Read mapping files
+        logging.info(f'Parsing alignment files')
+        aligned_inserts = read_and_pair_vsearch_tab_files(pe_m8_file, se_m8_file)
+        logging.info(f'Finished parsing alignment files')
+        # 4. Filter
+        logging.info(f'Filtering alignments by score and length')
+        insert_2_best_alignments = {}
+        for insert_name, aligned_insert in aligned_inserts.items():
+            best_alignments = aligned_insert.extract_best_alignments()
+            insert_2_best_alignments[insert_name] = best_alignments
+        logging.info(f'Finished filtering')
+        logging.info(f'Performing LCA calculations')
+        otu_2_taxpath, rank_2_taxpath = read_id_to_taxpath(taxmap)
+
+        insert_2_lca = {}
+        for insert_name, best_alignments in insert_2_best_alignments.items():
+            lca = lca_vsearch(best_alignments, otu_2_taxpath)
+            insert_2_lca[insert_name] = lca
+        logging.info(f'Finished LCA calculations')
 
     logging.info(f'Start writing output files')
 
