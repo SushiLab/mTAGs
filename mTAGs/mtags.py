@@ -28,7 +28,7 @@ import string
 Start Global config section
 '''
 
-MTAGS_VERSION = "1.0.0"
+MTAGS_VERSION = "1.0.1"
 
 
 
