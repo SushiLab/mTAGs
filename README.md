@@ -51,7 +51,7 @@ Questions/Comments? Write a github issue.
 
 ### Installation using conda
 
-The easiest way to install mVIRs is to use the conda package manager, which will automatically create an environment with dependencies installed in the correct version.
+The easiest way to install mTAGs is to use the conda package manager, which will automatically create an environment with dependencies installed in the correct version.
 
 ```bash
 $ conda create -n mtags python=3.7 hmmer vsearch
