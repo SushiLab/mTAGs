@@ -59,9 +59,7 @@ $ source activate mtags
 # or
 $ conda activate mtags
 
-$ git clone https://github.com/SushiLab/mTAGs.git
-$ cd mTAGs
-$ pip install -e . 
+$ pip install mTAGs
 
 # Download mTAGs database
 $ mtags download
@@ -80,7 +78,7 @@ $ mtags
 ```bash
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
             sequences of ribosomal RNA gene
-Version:    1.0.0
+Version:    1.0.4
 Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
             degenerate consensus reference sequences of ribosomal RNA
             gene. Bioinformatics (2021)
@@ -111,9 +109,7 @@ The database needs to be downloaded in the last step of the installation. This n
 Manual installation is possible but not recommended. Install via pip after installation of dependencies:
 
 ```bash
-$ git clone https://github.com/SushiLab/mTAGs.git
-$ cd mTAGs
-$ pip install -e . 
+$ pip install mTAGs
 
 # Download mTAGs database
 $ mtags download
@@ -132,7 +128,7 @@ $ mtags
 ```bash
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
             sequences of ribosomal RNA gene
-Version:    1.0.0
+Version:    1.0.4
 Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
             degenerate consensus reference sequences of ribosomal RNA
             gene. Bioinformatics (2021)
@@ -175,7 +171,7 @@ This step uses precomputed HMM models to extract rRNA sequences from a metagenom
 $ mtags profile
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
             sequences of ribosomal RNA gene
-Version:    1.0.0
+Version:    1.0.4
 Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
             degenerate consensus reference sequences of ribosomal RNA
             gene. Bioinformatics (2021)
@@ -416,7 +412,7 @@ $  mtags merge
 2021-06-21 10:01:33,628 INFO: Starting mTAGs
 Program:    mTAGs - taxonomic profiling using degenerate consensus reference
             sequences of ribosomal RNA gene
-Version:    1.0.0
+Version:    1.0.4
 Reference:  Salazar, Ruscheweyh, et al. mTAGs: taxonomic profiling using
             degenerate consensus reference sequences of ribosomal RNA
             gene. Bioinformatics (2021)
