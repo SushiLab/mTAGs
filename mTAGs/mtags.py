@@ -37,7 +37,7 @@ MTAGS_CLASSIFY_QCOV = 0.5
 MTAGS_CLASSIFY_MATCHSCORE = 2
 MTAGS_CLASSIFY_MISMATCHSCORE = -4
 
-workdir = pathlib.Path(__file__).absolute().parent.parent.joinpath('db')
+workdir = pathlib.Path(__file__).absolute().parent.joinpath('db')
 _database138 = workdir.joinpath('SILVA-138_NR-97_complink_cons.vsearch.udb')
 _taxmap138 = workdir.joinpath('SILVA-138_NR-97_complink_cons.taxmap')
 _database128 = workdir.joinpath('SILVA-128_NR-97_complink_cons.vsearch.udb')
@@ -393,7 +393,7 @@ def mtags_extract(input_seq_file: pathlib.Path, output_folder: pathlib.Path, rea
     for molecule in ['ssu', 'lsu']:
         logging.info(f'Start detecting rRNA sequences for molecule={molecule}')
         for (tmp_fasta_file, orientation) in [(fasta_forward, 'for'), (fasta_reverse, 'rev')]:
-            folder = str(pathlib.Path(__file__).parent.parent.joinpath('data'))
+            folder = str(pathlib.Path(__file__).parent.joinpath('data'))
             hmmer_pattern_file = pathlib.Path(folder + f'/{molecule}.hmm').absolute()
             hmmer_out_file = pathlib.Path(str(tmp_fasta_file) + f'_{molecule}.hmmer')
             dom_out_file = pathlib.Path(str(tmp_fasta_file) + f'_{molecule}.dom')
