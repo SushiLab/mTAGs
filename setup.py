@@ -11,6 +11,7 @@ setup(
     keywords = "bioinformatics metagenomics ngs 16S",
     url = "https://github.com/SushiLab/mTAGs",
     packages=['mTAGs'],
+    download_url = "https://github.com/SushiLab/mTAGs/archive/refs/tags/1.0.2.tar.gz",
     entry_points = {
         'console_scripts': ['mtags=mTAGs.mtags:main'],
     }
