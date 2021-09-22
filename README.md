@@ -61,7 +61,7 @@ $ conda activate mtags
 
 $ git clone https://github.com/SushiLab/mTAGs.git
 $ cd mTAGs
-$ pip install -r requirements.txt -e . 
+$ pip install -e . 
 
 # Download mTAGs database
 $ mtags download
@@ -113,7 +113,7 @@ Manual installation is possible but not recommended. Install via pip after insta
 ```bash
 $ git clone https://github.com/SushiLab/mTAGs.git
 $ cd mTAGs
-$ pip install -r requirements.txt -e . 
+$ pip install -e . 
 
 # Download mTAGs database
 $ mtags download
