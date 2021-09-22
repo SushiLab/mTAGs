@@ -6,7 +6,6 @@ import gzip
 import Bio.SeqIO.QualityIO
 import Bio.SeqIO.FastaIO as FastaIO
 from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
 import multiprocessing
 import argparse
 import collections
@@ -148,7 +147,7 @@ def revcomp(sequence: str) -> str:
     :param sequence:
     :return:
     """
-    return str(Seq(sequence, generic_dna).reverse_complement())
+    return str(Seq(sequence).reverse_complement())
 
 def stream_fa(sequence_file: pathlib.Path):
     """
