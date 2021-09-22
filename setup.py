@@ -1,5 +1,8 @@
 from setuptools import setup
+import os
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 install_requires = ['biopython']
 long_description = read('README.md')
 setup(
